@@ -1,0 +1,44 @@
+{
+  "name": "@gaubee/88code-sdk",
+  "version": "0.1.0",
+  "description": "88Code API SDK for Node.js/TypeScript",
+  "type": "module",
+  "main": "./dist/index.mjs",
+  "types": "./dist/index.d.mts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "types": "./dist/index.d.mts"
+    }
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "build": "tsdown src/index.ts --format esm --dts --clean",
+    "dev": "tsdown src/index.ts --format esm --dts --watch",
+    "test": "npx tsx examples/test-queries.ts",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "keywords": [
+    "88code",
+    "api",
+    "sdk",
+    "claude",
+    "codex"
+  ],
+  "author": "Gaubee",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "dotenv": "^16.0.0",
+    "tsdown": "^0.18.4",
+    "tsx": "^4.0.0",
+    "typescript": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

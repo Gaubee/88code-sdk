@@ -44,7 +44,8 @@ const DEFAULT_SETTINGS: AppSettings = {
 
 // ===== Store 实现 =====
 
-let settings: AppSettings = loadSettings();
+let settings: AppSettings = DEFAULT_SETTINGS;
+let initialized = false;
 const listeners = new Set<() => void>();
 
 function loadSettings(): AppSettings {
@@ -63,6 +64,13 @@ function loadSettings(): AppSettings {
   return DEFAULT_SETTINGS;
 }
 
+function ensureInitialized(): void {
+  if (!initialized && typeof window !== "undefined") {
+    settings = loadSettings();
+    initialized = true;
+  }
+}
+
 function saveSettings(newSettings: AppSettings): void {
   if (typeof window === "undefined") return;
   try {
@@ -78,6 +86,7 @@ function subscribe(callback: () => void): () => void {
 }
 
 function getSnapshot(): AppSettings {
+  ensureInitialized();
   return settings;
 }
 

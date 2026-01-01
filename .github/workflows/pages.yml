@@ -47,7 +47,13 @@ jobs:
 
       - name: Build demo
         working-directory: demos/multiple
-        run: pnpm build
+        env:
+          VITE_BASE: ${{ vars.CUSTOM_DOMAIN != '' && '/' || format('/{0}/', github.event.repository.name) }}
+        run: pnpm exec vite build --base=$VITE_BASE
+
+      - name: Prepare Pages SPA (404 + .nojekyll)
+        working-directory: demos/multiple
+        run: node scripts/postbuild-pages.mjs
 
       - name: Add CNAME (optional)
         if: ${{ vars.CUSTOM_DOMAIN != '' }}
@@ -67,4 +73,3 @@ jobs:
     steps:
       - id: deployment
         uses: actions/deploy-pages@v4
-

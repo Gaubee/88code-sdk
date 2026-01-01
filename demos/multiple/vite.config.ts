@@ -6,8 +6,7 @@ import viteTsConfigPaths from 'vite-tsconfig-paths'
 import tailwindcss from '@tailwindcss/vite'
 import pkg from './package.json'
 
-const config = defineConfig(({ command }) => ({
-  base: process.env.VITE_BASE || '/',
+const config = defineConfig(() => ({
   define: {
     'import.meta.env.APP_VERSION': JSON.stringify(pkg.version),
   },

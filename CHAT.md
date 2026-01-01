@@ -8,21 +8,21 @@ Codex Free 的卡片采用“紫色”
 
 ---
 
-正在进行中的任务：
+88code-sdk/demos/multiple:
 
-maybe-done:使用 sidebar 组件优化侧边栏
-todo:使用 scroll-area 组件优化所有滚动
-maybe-done:所有“刷新”按钮的旁边新增一个“自动刷新”的 toggle，并在设置面板中配置全局的“自动刷新的轮询时间”
-maybe-done:优化移动端的交互体验（你自己用 browsermcp 中调试到满意为止）
-todo:封装一系列统一的的 service+tankstack-query 来做服务提供，统一数据的状态管理、统一数据的缓存，统一自动刷新等等和请求有关的管理；并使用 Context 来进行注入
-todo:所有任务完成后，把这个前端demo配置成github-page，请你做好项目的cicd，你有全局的gh命令可以使用。注意相对路径的的支持，因为最终github-page上，它的路径应该是 xxx.github.io/88code-sdk，同时也要支持custom-domain: xxxxx.com 这样的访问。
+使用 sidebar 组件优化侧边栏
+使用 scroll-area 组件优化所有滚动
+所有“刷新”按钮的旁边新增一个“自动刷新”的 toggle，并在设置面板中配置全局的“自动刷新的轮询时间”
+优化移动端的交互体验（你自己用 browsermcp 中调试到满意为止）
+封装一系列统一的的 service+tankstack-query 来做服务提供，统一数据的状态管理、统一数据的缓存，统一自动刷新等等和请求有关的管理；并使用 Context 来进行注入
+所有任务完成后，把这个前端demo配置成github-page，请你做好项目的cicd，你有全局的gh命令可以使用。注意相对路径的的支持，因为最终github-page上，它的路径应该是 xxx.github.io/88code-sdk，同时也要支持custom-domain: xxxxx.com 这样的访问。
 
 - 等到网站部署好了再通知我，否则一直工作到所有任务完成。
 - 另外，我看到你自己去写shadcnui的组件了，不要这样，请使用 npx shadcn add 去做添加
 
 ---
 
-新任务：
+88code-sdk/demos/multiple:
 
 1. 我做了一个 public/logo.webp, 请更换 logo，可以适量进行缩放获得不同尺寸
 2. 关于任务：“封装一系列统一的的 service+tankstack-query 来做服务提供，统一数据的状态管理、统一数据的缓存，统一自动刷新等等和请求有关的管理；并使用 Context 来进行注入” 还是没完成，要评估这项任务，最好的效果是：在 tab 之间切换，不论这些卡片被创建、销毁，但是只要请求过数据，那么下一次再创建的时候，只能立刻显示出来的。核心的工作原理是：
@@ -35,9 +35,17 @@ todo:所有任务完成后，把这个前端demo配置成github-page，请你做
    1. 另外有一个奇怪的BUG：linuxdo 账号有一个 paygo，它的“额度余额: $-0.0751124163”，界面上的进度条应该是“空”的，可是我看到的却是“满”的。如果是同样的渲染逻辑，为什么这个订阅那么奇怪？还是说这个是 paygo 的数据结构不一样?
    2. 因为 paygo 是“按量付费”，所以理论上不该有”重置次数“，虽然它的数据确实提供了这个字段给你，但是“只有按月套餐才能重置积分”，所以你需要判断`subscriptionPlan.planType: "MONTHLY"|"PAY_PER_USE"`
    3. 订阅卡片上需要显示 `subscriptionPlan.features`，在首页上的订阅卡片比较紧凑，不显示这个信息。
-4. 分析接口 https://relaypulse.top/api/status?period=90m&board=hot ，理解参数的含义，然后封装到我们这套 SDK 中，作为“扩展”功能存在。
-   1. 在界面上新增一个页面，用来展示这些供应商的服务可用状态，并提供过滤功能.
-      1. 参考网站：https://relaypulse.top/
-      2. 参考截图：![https://relaypulse.top/?category=commercial&sort=channel_desc&provider=88code&service=cc](.tmp/relaypulse.png)
-      3. 截图对应的a11y: [relaypulse-a11y.txt](.tmp/relaypulse-a11y.txt)
-   2. 然后在我们的首页新增一个小卡片，用来展示 `88code` 的服务状态
+
+---
+
+88code-sdk/src:
+
+1. 分析接口 https://relaypulse.top/api/status?period=90m&board=hot ，理解参数的含义，然后封装到我们这套 SDK 中，作为“扩展”功能存在。
+
+88code-sdk/demos/multiple:
+
+1. 在界面上新增一个页面，用来展示这些供应商的服务可用状态，并提供过滤功能.
+   1. 参考网站：https://relaypulse.top/
+   2. 参考截图：![https://relaypulse.top/?category=commercial&sort=channel_desc&provider=88code&service=cc](.tmp/relaypulse.png)
+   3. 截图对应的a11y: [relaypulse-a11y.txt](.tmp/relaypulse-a11y.txt)
+2. 然后在我们的首页新增一个小卡片，用来展示 `88code` 的服务状态

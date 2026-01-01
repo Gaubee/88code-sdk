@@ -57,12 +57,12 @@ jobs:
 
       - name: Add CNAME (optional)
         if: ${{ vars.CUSTOM_DOMAIN != '' }}
-        run: echo "${{ vars.CUSTOM_DOMAIN }}" > demos/multiple/dist/client/CNAME
+        run: echo "${{ vars.CUSTOM_DOMAIN }}" > demos/multiple/dist/CNAME
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: demos/multiple/dist/client
+          path: demos/multiple/dist
 
   deploy:
     needs: build

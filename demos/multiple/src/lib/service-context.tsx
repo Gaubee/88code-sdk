@@ -4,7 +4,6 @@
  */
 
 import * as React from "react";
-import { QueryClientProvider } from "@tanstack/react-query";
 import { useSettings, type AppSettings } from "./settings-store";
 import { queryClient } from "./query-client";
 import {
@@ -166,11 +165,9 @@ export function ServiceProvider({ children }: ServiceProviderProps) {
   );
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <ServiceContext.Provider value={value}>
-        {children}
-      </ServiceContext.Provider>
-    </QueryClientProvider>
+    <ServiceContext.Provider value={value}>
+      {children}
+    </ServiceContext.Provider>
   );
 }
 

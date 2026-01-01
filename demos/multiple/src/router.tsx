@@ -1,18 +1,16 @@
-import { createRouter, createHashHistory, createMemoryHistory } from '@tanstack/react-router'
+import { createRouter, createHashHistory } from '@tanstack/react-router'
 
 // Import the generated route tree
 import { routeTree } from './routeTree.gen'
 
+// Create hash history for GitHub Pages compatibility
+const hashHistory = createHashHistory()
+
 // Create a new router instance
 export const getRouter = () => {
-  // Use hash history in browser, memory history for SSR/prerender
-  const history = typeof window !== 'undefined'
-    ? createHashHistory()
-    : createMemoryHistory({ initialEntries: ['/'] })
-
   const router = createRouter({
     routeTree,
-    history,
+    history: hashHistory,
     scrollRestoration: true,
     defaultPreloadStaleTime: 0,
   })

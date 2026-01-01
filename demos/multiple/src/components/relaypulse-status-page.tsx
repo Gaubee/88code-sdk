@@ -2,6 +2,9 @@ import * as React from "react";
 import { Activity, RefreshCw } from "lucide-react";
 import type { RelayPulseBoard, RelayPulsePeriod, RelayPulseStatusEntry } from "@gaubee/88code-sdk";
 import { useRelayPulseStatus } from "@/lib/relaypulse-queries";
+import { useAutoRefresh } from "@/lib/use-sdk";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import {
   computeRelayPulseAvailabilityPercent,
   formatRelayPulseTimestampSeconds,
@@ -58,20 +61,20 @@ const SORT_OPTIONS: Array<{ value: SortOption; label: string }> = [
   { value: "latency_desc", label: "延迟 ↓" },
 ];
 
-function isRelayPulsePeriod(value: string): value is RelayPulsePeriod {
-  return PERIOD_OPTIONS.some((opt) => opt.value === value);
+function isRelayPulsePeriod(value: string | null): value is RelayPulsePeriod {
+  return value !== null && PERIOD_OPTIONS.some((opt) => opt.value === value);
 }
 
-function isRelayPulseBoard(value: string): value is RelayPulseBoard {
-  return BOARD_OPTIONS.some((opt) => opt.value === value);
+function isRelayPulseBoard(value: string | null): value is RelayPulseBoard {
+  return value !== null && BOARD_OPTIONS.some((opt) => opt.value === value);
 }
 
-function isRelayPulseCategory(value: string): value is RelayPulseCategory {
+function isRelayPulseCategory(value: string | null): value is RelayPulseCategory {
   return value === "all" || value === "commercial" || value === "public";
 }
 
-function isSortOption(value: string): value is SortOption {
-  return SORT_OPTIONS.some((opt) => opt.value === value);
+function isSortOption(value: string | null): value is SortOption {
+  return value !== null && SORT_OPTIONS.some((opt) => opt.value === value);
 }
 
 function StatusTrend({ entry }: { entry: RelayPulseStatusEntry }) {
@@ -92,6 +95,7 @@ function StatusTrend({ entry }: { entry: RelayPulseStatusEntry }) {
 }
 
 export function RelayPulseStatusPage() {
+  const { enabled: autoRefreshEnabled, toggle: toggleAutoRefresh } = useAutoRefresh();
   const [period, setPeriod] = React.useState<RelayPulsePeriod>("90m");
   const [board, setBoard] = React.useState<RelayPulseBoard>("hot");
   const [category, setCategory] = React.useState<RelayPulseCategory>("commercial");
@@ -167,10 +171,22 @@ export function RelayPulseStatusPage() {
             基于 RelayPulse 的公开探测数据（按 period 聚合）
           </p>
         </div>
-        <Button variant="outline" onClick={() => refetch()} disabled={isFetching}>
-          <RefreshCw className={isFetching ? "size-4 mr-1 animate-spin" : "size-4 mr-1"} />
-          刷新
-        </Button>
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <Switch
+              id="auto-refresh-status"
+              checked={autoRefreshEnabled}
+              onCheckedChange={toggleAutoRefresh}
+            />
+            <Label htmlFor="auto-refresh-status" className="text-sm cursor-pointer">
+              自动刷新
+            </Label>
+          </div>
+          <Button variant="outline" onClick={() => refetch()} disabled={isFetching}>
+            <RefreshCw className={isFetching ? "size-4 mr-1 animate-spin" : "size-4 mr-1"} />
+            刷新
+          </Button>
+        </div>
       </div>
 
       <Card>
@@ -226,7 +242,7 @@ export function RelayPulseStatusPage() {
                 }}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Category" />
+                  <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">全部</SelectItem>
@@ -238,7 +254,7 @@ export function RelayPulseStatusPage() {
             <div className="md:col-span-1">
               <Select value={provider} onValueChange={(v) => v && setProvider(v)}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Provider" />
+                  <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">所有 Provider</SelectItem>
@@ -253,7 +269,7 @@ export function RelayPulseStatusPage() {
             <div className="md:col-span-1">
               <Select value={service} onValueChange={(v) => v && setService(v)}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Service" />
+                  <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">所有 Service</SelectItem>
@@ -268,7 +284,7 @@ export function RelayPulseStatusPage() {
             <div className="md:col-span-1">
               <Select value={channel} onValueChange={(v) => v && setChannel(v)}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Channel" />
+                  <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">所有 Channel</SelectItem>
@@ -288,7 +304,7 @@ export function RelayPulseStatusPage() {
                 }}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Sort" />
+                  <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   {SORT_OPTIONS.map((opt) => (

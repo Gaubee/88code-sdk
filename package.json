@@ -5,6 +5,9 @@
   "type": "module",
   "main": "./dist/index.mjs",
   "types": "./dist/index.d.mts",
+  "bin": {
+    "88code-sdk": "./dist/cli.mjs"
+  },
   "exports": {
     ".": {
       "import": "./dist/index.mjs",
@@ -16,7 +19,7 @@
     "src"
   ],
   "scripts": {
-    "build": "tsdown src/index.ts --format esm --dts --clean",
+    "build": "tsdown src/index.ts src/cli.ts --format esm --dts --clean",
     "dev": "tsdown src/index.ts --format esm --dts --watch",
     "test": "npx tsx examples/test-queries.ts",
     "typecheck": "tsc --noEmit",

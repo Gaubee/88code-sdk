@@ -74,6 +74,19 @@ export type {
   UsageTrendPoint,
 } from "./types.ts";
 
+// ===== Extensions =====
+export { RELAYPULSE_BASE_URL, getRelayPulseStatus } from "./extensions/relaypulse.ts";
+export type {
+  RelayPulseBadge,
+  RelayPulseBoard,
+  RelayPulseCurrentStatus,
+  RelayPulsePeriod,
+  RelayPulseStatusCounts,
+  RelayPulseStatusEntry,
+  RelayPulseStatusParams,
+  RelayPulseTimelinePoint,
+} from "./extensions/relaypulse.ts";
+
 import { Code88Client } from "./client.ts";
 import { Code88Queries } from "./queries.ts";
 

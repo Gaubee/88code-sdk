@@ -1,5 +1,6 @@
 import { BarChart3 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { LoadingCard, QueryErrorFallback } from "@/components/ui/card-error-boundary";
 import { useModelUsage } from "@/lib/queries";
 import type { Account } from "@/lib/accounts-store";
@@ -52,29 +53,31 @@ export function ModelUsageCard({ account }: Props) {
         {modelStats.size === 0 ? (
           <p className="text-muted-foreground text-center py-4">暂无用量数据</p>
         ) : (
-          <div className="space-y-2 max-h-64 overflow-y-auto">
-            {Array.from(modelStats.entries())
-              .sort((a, b) => b[1].cost - a[1].cost)
-              .map(([model, stats]) => (
-                <div
-                  key={model}
-                  className="flex items-center justify-between p-2 border rounded text-xs"
-                >
-                  <div>
-                    <div className="font-medium">{model}</div>
-                    <div className="text-muted-foreground">
-                      {(stats.tokens ?? 0).toLocaleString()} tokens
+          <ScrollArea className="max-h-64">
+            <div className="space-y-2 pr-3">
+              {Array.from(modelStats.entries())
+                .sort((a, b) => b[1].cost - a[1].cost)
+                .map(([model, stats]) => (
+                  <div
+                    key={model}
+                    className="flex items-center justify-between p-2 border rounded text-xs"
+                  >
+                    <div>
+                      <div className="font-medium">{model}</div>
+                      <div className="text-muted-foreground">
+                        {(stats.tokens ?? 0).toLocaleString()} tokens
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div>{(stats.requests ?? 0).toLocaleString()} 请求</div>
+                      <div className="text-muted-foreground">
+                        ${(stats.cost ?? 0).toFixed(4)}
+                      </div>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <div>{(stats.requests ?? 0).toLocaleString()} 请求</div>
-                    <div className="text-muted-foreground">
-                      ${(stats.cost ?? 0).toFixed(4)}
-                    </div>
-                  </div>
-                </div>
-              ))}
-          </div>
+                ))}
+            </div>
+          </ScrollArea>
         )}
       </CardContent>
     </Card>

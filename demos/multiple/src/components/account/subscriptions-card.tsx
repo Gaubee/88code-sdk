@@ -1,21 +1,11 @@
-import { CreditCard, RefreshCw, Loader2, Calendar } from "lucide-react";
+import { CreditCard, Calendar } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 import { LoadingCard, QueryErrorFallback } from "@/components/ui/card-error-boundary";
 import { useSubscriptions, useResetCredits } from "@/lib/queries";
 import type { Account } from "@/lib/accounts-store";
+import { SubscriptionPlanCard } from "./subscription-plan-card";
+import { useState } from "react";
 
 interface Props {
   account: Account;
@@ -24,6 +14,7 @@ interface Props {
 export function SubscriptionsCard({ account }: Props) {
   const { data: subscriptions, isLoading, error, refetch } = useSubscriptions(account);
   const resetMutation = useResetCredits(account);
+  const [resettingId, setResettingId] = useState<number | null>(null);
 
   if (isLoading) {
     return <LoadingCard title="订阅与额度" />;
@@ -40,10 +31,13 @@ export function SubscriptionsCard({ account }: Props) {
   }
 
   const handleReset = async (subscriptionId: number) => {
+    setResettingId(subscriptionId);
     try {
       await resetMutation.mutateAsync(subscriptionId);
     } catch (err) {
       alert(err instanceof Error ? err.message : "重置失败");
+    } finally {
+      setResettingId(null);
     }
   };
 
@@ -68,72 +62,15 @@ export function SubscriptionsCard({ account }: Props) {
             {/* 活跃中的订阅 */}
             {activeSubscriptions.length > 0 && (
               <div className="space-y-4">
-                {activeSubscriptions.map((sub) => {
-                  const creditLimit = sub.subscriptionPlan?.creditLimit ?? 0;
-                  const currentCredits = sub.currentCredits ?? 0;
-                  // 进度条按剩余渲染：剩余越多越满
-                  const remainingPercent = creditLimit > 0 ? (currentCredits / creditLimit) * 100 : 0;
-                  const isResetting = resetMutation.isPending;
-
-                  return (
-                    <div key={sub.id} className="p-4 border rounded-lg">
-                      <div className="flex items-start justify-between mb-3">
-                        <div>
-                          <div className="font-medium flex items-center gap-2">
-                            {sub.subscriptionPlanName}
-                            <Badge variant="default">活跃中</Badge>
-                          </div>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            剩余 {sub.remainingDays ?? 0} 天 | 重置次数: {sub.resetTimes ?? 0}
-                            {sub.lastCreditReset && (
-                              <> | 上次重置: {new Date(sub.lastCreditReset).toLocaleString()}</>
-                            )}
-                          </p>
-                        </div>
-                        <AlertDialog>
-                          <AlertDialogTrigger
-                            className={buttonVariants({ size: "sm" })}
-                            disabled={isResetting}
-                          >
-                            {isResetting ? (
-                              <Loader2 className="size-4 animate-spin mr-1" />
-                            ) : (
-                              <RefreshCw className="size-4 mr-1" />
-                            )}
-                            重置额度
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>确认重置额度？</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                将重置 "{sub.subscriptionPlanName}" 的额度到初始值。每日重置次数有限制。
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>取消</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => handleReset(sub.id)}>
-                                确认重置
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      </div>
-
-                      <div className="space-y-1">
-                        <div className="flex justify-between text-xs">
-                          <span>剩余: ${currentCredits.toFixed(2)}</span>
-                          <span>总额度: ${creditLimit}</span>
-                        </div>
-                        <div className="h-2 bg-muted rounded-full overflow-hidden">
-                          <div
-                            className="h-full bg-primary transition-all"
-                            style={{ width: `${Math.min(remainingPercent, 100)}%` }}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
+                {activeSubscriptions.map((sub) => (
+                  <SubscriptionPlanCard
+                    key={sub.id}
+                    subscription={sub}
+                    variant="detail"
+                    resetting={resetMutation.isPending && resettingId === sub.id}
+                    onResetCredits={handleReset}
+                  />
+                ))}
               </div>
             )}
 

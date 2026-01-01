@@ -2,7 +2,10 @@ import { RefreshCw, User, AlertCircle, Loader2 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { getAccountById } from "@/lib/accounts-store";
 import { useLoginInfo, queryKeys } from "@/lib/queries";
+import { useAutoRefresh } from "@/lib/use-sdk";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { CardErrorBoundary } from "@/components/ui/card-error-boundary";
 import {
   DashboardOverviewCard,
@@ -21,6 +24,7 @@ export function AccountDetail({ accountId }: AccountDetailProps) {
   const account = getAccountById(accountId) ?? null;
   const queryClient = useQueryClient();
   const { data: loginInfo, isLoading, error } = useLoginInfo(account);
+  const { enabled: autoRefreshEnabled, toggle: toggleAutoRefresh } = useAutoRefresh();
 
   const handleRefreshAll = () => {
     if (account) {
@@ -70,10 +74,23 @@ export function AccountDetail({ accountId }: AccountDetailProps) {
             </p>
           )}
         </div>
-        <Button variant="outline" onClick={handleRefreshAll}>
-          <RefreshCw className="size-4 mr-1" />
-          刷新
-        </Button>
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <Switch
+              id="auto-refresh-account"
+              size="sm"
+              checked={autoRefreshEnabled}
+              onCheckedChange={toggleAutoRefresh}
+            />
+            <Label htmlFor="auto-refresh-account" className="text-sm text-muted-foreground cursor-pointer">
+              自动刷新
+            </Label>
+          </div>
+          <Button variant="outline" onClick={handleRefreshAll}>
+            <RefreshCw className="size-4 mr-1" />
+            刷新
+          </Button>
+        </div>
       </div>
 
       {/* Dashboard Overview */}

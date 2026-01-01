@@ -1,9 +1,8 @@
 import { HeadContent, Scripts, createRootRoute, Outlet } from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import { TanStackDevtools } from "@tanstack/react-devtools";
-import { QueryClientProvider } from "@tanstack/react-query";
 import { Layout } from "@/components/layout";
-import { queryClient } from "@/lib/query-client";
+import { ServiceProvider } from "@/lib/service-context";
 
 import appCss from "../styles.css?url";
 
@@ -23,6 +22,11 @@ export const Route = createRootRoute({
     ],
     links: [
       {
+        rel: "icon",
+        href: "logo.webp",
+        type: "image/webp",
+      },
+      {
         rel: "stylesheet",
         href: appCss,
       },
@@ -37,6 +41,32 @@ function RootDocument({ children }: { children: React.ReactNode }) {
   return (
     <html lang="zh-CN">
       <head>
+        <script
+          // GitHub Pages: https://{user}.github.io/88code-sdk/
+          // Custom Domain: https://example.com/
+          dangerouslySetInnerHTML={{
+            __html: `
+(function () {
+  try {
+    var repo = "88code-sdk";
+    var pathname = window.location.pathname || "/";
+    var isProjectPages =
+      pathname === "/" + repo ||
+      pathname.startsWith("/" + repo + "/");
+
+    var base = isProjectPages ? "/" + repo + "/" : "/";
+    window.__APP_BASE__ = base;
+
+    var baseEl = document.createElement("base");
+    baseEl.href = base;
+    document.head.prepend(baseEl);
+  } catch (_) {
+    // ignore
+  }
+})();
+            `.trim(),
+          }}
+        />
         <HeadContent />
       </head>
       <body>
@@ -60,10 +90,10 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 
 function RootComponent() {
   return (
-    <QueryClientProvider client={queryClient}>
+    <ServiceProvider>
       <Layout>
         <Outlet />
       </Layout>
-    </QueryClientProvider>
+    </ServiceProvider>
   );
 }

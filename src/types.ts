@@ -11,7 +11,7 @@ export interface SubscriptionPlan {
   cost: number;
   features: string;
   creditLimit: number;
-  planType: string;
+  planType: "MONTHLY" | "PAY_PER_USE";
 }
 
 /** 订阅信息 */

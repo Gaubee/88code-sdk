@@ -1,10 +1,12 @@
 import { useState } from "react";
-import { Plus, Trash2, Eye, EyeOff, Edit2, Check, X, Server } from "lucide-react";
+import { Plus, Trash2, Eye, EyeOff, Edit2, Check, X, Server, Timer } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
-import { useAccounts } from "@/lib/use-sdk";
+import { useAccounts, useAutoRefresh } from "@/lib/use-sdk";
+import { REFRESH_INTERVALS } from "@/lib/settings-store";
 import { DEFAULT_API_HOSTS, DEFAULT_API_HOST } from "@/lib/accounts-store";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
 import {
   Card,
   CardContent,
@@ -36,6 +38,7 @@ const CUSTOM_HOST_VALUE = "__custom__";
 
 export function SettingsPanel() {
   const { accounts, addAccount, removeAccount, updateAccount } = useAccounts();
+  const { enabled: autoRefreshEnabled, interval: autoRefreshInterval, toggle: toggleAutoRefresh, setInterval: setRefreshInterval } = useAutoRefresh();
   const [newName, setNewName] = useState("");
   const [newToken, setNewToken] = useState("");
   const [newApiHost, setNewApiHost] = useState<string>(DEFAULT_API_HOST);
@@ -134,6 +137,65 @@ export function SettingsPanel() {
           管理您的 88Code 账号，添加或删除账号以便统一管理
         </p>
       </div>
+
+      {/* 全局设置 */}
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <Timer className="size-4" />
+            全局设置
+          </CardTitle>
+          <CardDescription>
+            配置自动刷新和其他全局选项
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {/* 自动刷新开关 */}
+            <div className="flex items-center justify-between">
+              <div>
+                <Label htmlFor="auto-refresh-global" className="text-sm font-medium">
+                  自动刷新
+                </Label>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  自动刷新所有数据
+                </p>
+              </div>
+              <Switch
+                id="auto-refresh-global"
+                checked={autoRefreshEnabled}
+                onCheckedChange={toggleAutoRefresh}
+              />
+            </div>
+            {/* 刷新间隔 */}
+            <div className="flex items-center justify-between">
+              <div>
+                <Label className="text-sm font-medium">
+                  刷新间隔
+                </Label>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  数据自动刷新的时间间隔
+                </p>
+              </div>
+              <Select
+                value={String(autoRefreshInterval)}
+                onValueChange={(v) => v && setRefreshInterval(Number(v))}
+              >
+                <SelectTrigger className="w-[120px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {REFRESH_INTERVALS.map((interval) => (
+                    <SelectItem key={interval.value} value={String(interval.value)}>
+                      {interval.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* 添加新账号 */}
       <Card className="mb-6">

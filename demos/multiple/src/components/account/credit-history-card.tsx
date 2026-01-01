@@ -1,5 +1,6 @@
 import { History } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Table,
   TableBody,
@@ -47,7 +48,7 @@ export function CreditHistoryCard({ account }: Props) {
         {history.length === 0 ? (
           <p className="text-muted-foreground text-center py-4">暂无历史记录</p>
         ) : (
-          <div className="max-h-96 overflow-y-auto">
+          <ScrollArea className="max-h-96">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -85,7 +86,7 @@ export function CreditHistoryCard({ account }: Props) {
                 ))}
               </TableBody>
             </Table>
-          </div>
+          </ScrollArea>
         )}
       </CardContent>
     </Card>

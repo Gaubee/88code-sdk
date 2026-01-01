@@ -10,8 +10,9 @@ function patchHtml(html) {
   // 1) Remove modulepreload links: they appear before our base script and would resolve incorrectly.
   html = html.replace(/<link rel="modulepreload"[^>]*\/>/g, "")
 
-  // 2) Replace TanStack Start's "/./assets/..." with base-aware relative URLs.
-  html = html.replaceAll("/./assets/", "assets/")
+  // 2) Replace TanStack Start's "/./assets/..." with base-aware *relative* URLs.
+  //    Note: ESM import specifiers must start with `./`/`../`/`/`/`http(s)://`.
+  html = html.replaceAll("/./assets/", "./assets/")
 
   // 3) Make internal links base-aware (GH Pages project path vs custom domain).
   //    Root path needs to be explicit.

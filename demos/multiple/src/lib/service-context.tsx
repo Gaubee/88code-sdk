@@ -198,3 +198,14 @@ export function useAutoRefresh() {
     setInterval: setRefreshInterval,
   };
 }
+
+/** 只获取 RelayPulse 设置 */
+export function useRelayPulseSettings() {
+  const { settings, updateSettings } = useService();
+  return {
+    enabled: settings.relayPulseEnabled,
+    baseUrl: settings.relayPulseBaseUrl,
+    setEnabled: (enabled: boolean) => updateSettings({ relayPulseEnabled: enabled }),
+    setBaseUrl: (url: string) => updateSettings({ relayPulseBaseUrl: url }),
+  };
+}

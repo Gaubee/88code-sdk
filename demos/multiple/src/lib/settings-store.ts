@@ -12,7 +12,14 @@ export interface AppSettings {
   autoRefreshEnabled: boolean;
   /** 自动刷新间隔 (毫秒) */
   autoRefreshInterval: number;
+  /** 是否启用 RelayPulse 服务状态监控 */
+  relayPulseEnabled: boolean;
+  /** RelayPulse 自定义 API 地址（用于本地代理） */
+  relayPulseBaseUrl: string;
 }
+
+/** RelayPulse 默认地址 */
+export const RELAYPULSE_DEFAULT_URL = "https://relaypulse.top";
 
 // ===== 常量 =====
 
@@ -31,6 +38,8 @@ export const REFRESH_INTERVALS = [
 const DEFAULT_SETTINGS: AppSettings = {
   autoRefreshEnabled: true,
   autoRefreshInterval: 5000, // 默认 5 秒
+  relayPulseEnabled: false, // 默认关闭，需要本地代理
+  relayPulseBaseUrl: "", // 空表示使用默认地址
 };
 
 // ===== Store 实现 =====

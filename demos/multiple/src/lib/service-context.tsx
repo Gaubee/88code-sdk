@@ -17,6 +17,7 @@ import {
 } from "./accounts-store";
 import { PollingManager } from "./services/polling-manager";
 import { Code88Service } from "./services/code88-service";
+import { AutoResetService } from "./services/auto-reset-service";
 
 // ===== Context 类型 =====
 
@@ -24,6 +25,7 @@ interface ServiceContextValue {
   // Query / Services
   pollingManager: PollingManager;
   code88: Code88Service;
+  autoReset: AutoResetService;
 
   // 设置
   settings: AppSettings;
@@ -68,6 +70,7 @@ export function ServiceProvider({ children }: ServiceProviderProps) {
   } = useSettings();
 
   const code88 = React.useMemo(() => new Code88Service(), []);
+  const autoReset = React.useMemo(() => new AutoResetService(code88), [code88]);
   const pollingManager = React.useMemo(
     () =>
       new PollingManager(queryClient, {
@@ -136,6 +139,7 @@ export function ServiceProvider({ children }: ServiceProviderProps) {
     () => ({
       pollingManager,
       code88,
+      autoReset,
       settings,
       updateSettings,
       toggleAutoRefresh,
@@ -151,6 +155,7 @@ export function ServiceProvider({ children }: ServiceProviderProps) {
     [
       pollingManager,
       code88,
+      autoReset,
       settings,
       updateSettings,
       toggleAutoRefresh,

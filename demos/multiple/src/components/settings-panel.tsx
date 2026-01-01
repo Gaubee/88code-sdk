@@ -1,10 +1,12 @@
 import { useState } from "react";
-import { Plus, Trash2, Eye, EyeOff, Edit2, Check, X, Server, Timer, Activity, Terminal, Copy, Download, Upload, FileJson } from "lucide-react";
+import { Plus, Trash2, Eye, EyeOff, Edit2, Check, X, Server, Timer, Activity, Terminal, Copy, Download, Upload, FileJson, Zap } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { useAccounts, useAutoRefresh } from "@/lib/use-sdk";
 import type { Account } from "@/lib/accounts-store";
 import { useRelayPulseSettings } from "@/lib/service-context";
 import { REFRESH_INTERVALS, RELAYPULSE_DEFAULT_URL } from "@/lib/settings-store";
+import { useAutoResetSettings } from "@/lib/auto-reset-store";
+import { RESET_WINDOWS, getNextResetTime, formatCountdown } from "@gaubee/88code-sdk";
 import { DEFAULT_API_HOSTS, DEFAULT_API_HOST } from "@/lib/accounts-store";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -48,6 +50,7 @@ export function SettingsPanel() {
   const { accounts, addAccount, removeAccount, updateAccount } = useAccounts();
   const { enabled: autoRefreshEnabled, interval: autoRefreshInterval, toggle: toggleAutoRefresh, setInterval: setRefreshInterval } = useAutoRefresh();
   const { enabled: relayPulseEnabled, baseUrl: relayPulseBaseUrl, setEnabled: setRelayPulseEnabled, setBaseUrl: setRelayPulseBaseUrl } = useRelayPulseSettings();
+  const { settings: autoResetSettings, toggleGlobal: toggleAutoReset, lastExecution } = useAutoResetSettings();
   const [copied, setCopied] = useState(false);
   const [importExportDialogOpen, setImportExportDialogOpen] = useState(false);
   const [importExportText, setImportExportText] = useState("");
@@ -248,6 +251,95 @@ export function SettingsPanel() {
                 </SelectContent>
               </Select>
             </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* 智能自动重置 */}
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <Zap className="size-4" />
+            智能自动重置
+          </CardTitle>
+          <CardDescription>
+            在固定时间窗口自动重置订阅额度，最大化利用重置机会
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {/* 全局开关 */}
+            <div className="flex items-center justify-between">
+              <div>
+                <Label htmlFor="auto-reset-global" className="text-sm font-medium">
+                  启用智能自动重置
+                </Label>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  开启后可在订阅卡片中为每个订阅单独配置
+                </p>
+              </div>
+              <Switch
+                id="auto-reset-global"
+                checked={autoResetSettings.enabled}
+                onCheckedChange={toggleAutoReset}
+              />
+            </div>
+
+            {/* 重置策略说明 */}
+            <div className="rounded-lg border bg-muted/50 p-4">
+              <div className="flex items-start gap-3">
+                <Zap className="size-5 text-amber-500 mt-0.5 shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium mb-2">重置策略</p>
+                  <div className="space-y-2 text-xs text-muted-foreground">
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono bg-background px-1.5 py-0.5 rounded border">18:55</span>
+                      <span>优先窗口 - 剩余≥2次时重置，保留1次给晚间</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono bg-background px-1.5 py-0.5 rounded border">23:55</span>
+                      <span>兜底窗口 - 无条件重置，确保每日重置</span>
+                    </div>
+                  </div>
+                  {(() => {
+                    const next = getNextResetTime();
+                    if (!next) return null;
+                    const msUntil = next.time.getTime() - Date.now();
+                    return (
+                      <p className="text-xs text-muted-foreground mt-3">
+                        下次重置窗口: <span className="font-medium text-foreground">{next.time.toLocaleTimeString()}</span>
+                        {" "}({formatCountdown(msUntil)})
+                      </p>
+                    );
+                  })()}
+                </div>
+              </div>
+            </div>
+
+            {/* 上次执行结果 */}
+            {lastExecution && (
+              <div className="rounded-lg border p-4">
+                <p className="text-sm font-medium mb-2">上次执行</p>
+                <p className="text-xs text-muted-foreground mb-2">
+                  {new Date(lastExecution.timestamp).toLocaleString()} · 窗口 {lastExecution.window}
+                </p>
+                {lastExecution.results.length > 0 ? (
+                  <div className="space-y-1">
+                    {lastExecution.results.map((r, i) => (
+                      <div key={i} className="flex items-center gap-2 text-xs">
+                        <span className={r.success ? "text-green-600" : "text-muted-foreground"}>
+                          {r.success ? "✓" : "○"}
+                        </span>
+                        <span>{r.subscriptionName}</span>
+                        <span className="text-muted-foreground">- {r.reason}</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-xs text-muted-foreground">无需重置</p>
+                )}
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>

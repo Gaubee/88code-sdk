@@ -19,6 +19,8 @@
     "src"
   ],
   "scripts": {
+    "npm": "pnpm build && pnpm pub",
+    "pub": "pnpm publish --access publish --no-git-checks --access public",
     "build": "tsdown src/index.ts src/cli.ts --format esm --dts --clean",
     "dev": "tsdown src/index.ts --format esm --dts --watch",
     "test": "npx tsx examples/test-queries.ts",

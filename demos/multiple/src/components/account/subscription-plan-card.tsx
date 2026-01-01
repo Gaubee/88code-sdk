@@ -1,7 +1,15 @@
-import { CreditCard, Loader2, RefreshCw } from "lucide-react";
+import { CreditCard, Loader2, RefreshCw, Zap } from "lucide-react";
 import type { Subscription } from "@gaubee/88code-sdk";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -13,6 +21,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { useAutoResetSettings } from "@/lib/auto-reset-store";
 
 type SubscriptionPlanType = "MONTHLY" | "PAY_PER_USE";
 
@@ -60,9 +69,18 @@ export function SubscriptionPlanCard({
   const showFeatures = variant === "detail";
   const showResetMeta = planType === "MONTHLY";
 
+  // 智能自动重置
+  const { settings: autoResetSettings, isEnabled, setSubscriptionEnabled } = useAutoResetSettings();
+  const smartResetEnabled = isEnabled(subscription.id);
+  const canEnableSmartReset = planType === "MONTHLY" && autoResetSettings.enabled;
+
   const handleReset = async () => {
     if (!canReset) return;
     await onResetCredits(subscription.id);
+  };
+
+  const handleSmartResetToggle = (checked: boolean) => {
+    setSubscriptionEnabled(subscription.id, checked);
   };
 
   return (
@@ -115,35 +133,81 @@ export function SubscriptionPlanCard({
           )}
         </div>
 
-        {canReset && (
-          <AlertDialog>
-            <AlertDialogTrigger
-              className={buttonVariants({
-                size: variant === "compact" ? "xs" : "sm",
-              })}
-              disabled={resetting}
-            >
-              {resetting ? (
-                <Loader2 className="size-3 animate-spin" />
-              ) : (
-                <RefreshCw className="size-3" />
-              )}
-              <span className="ml-1">重置额度</span>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>确认重置额度？</AlertDialogTitle>
-                <AlertDialogDescription>
-                  将重置 "{subscription.subscriptionPlanName}" 的额度到初始值。每日重置次数有限制。
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>取消</AlertDialogCancel>
-                <AlertDialogAction onClick={handleReset}>确认重置</AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        )}
+        <div className="flex items-center gap-2">
+          {/* 智能自动重置开关 */}
+          {planType === "MONTHLY" && variant === "detail" && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="flex items-center gap-1.5">
+                    <Switch
+                      id={`smart-reset-${subscription.id}`}
+                      checked={smartResetEnabled}
+                      onCheckedChange={handleSmartResetToggle}
+                      disabled={!autoResetSettings.enabled}
+                      className="data-[state=checked]:bg-amber-500"
+                    />
+                    <Label
+                      htmlFor={`smart-reset-${subscription.id}`}
+                      className={`text-xs cursor-pointer flex items-center gap-1 ${
+                        !autoResetSettings.enabled ? "text-muted-foreground" : ""
+                      }`}
+                    >
+                      <Zap className="size-3" />
+                      智能
+                    </Label>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="max-w-[240px]">
+                  {autoResetSettings.enabled ? (
+                    <p className="text-xs">
+                      18:55/23:55 自动重置
+                      <br />
+                      18:55: 剩余≥2次时重置
+                      <br />
+                      23:55: 兜底重置
+                    </p>
+                  ) : (
+                    <p className="text-xs">
+                      请先在设置中启用智能自动重置
+                    </p>
+                  )}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
+
+          {/* 手动重置按钮 */}
+          {canReset && (
+            <AlertDialog>
+              <AlertDialogTrigger
+                className={buttonVariants({
+                  size: variant === "compact" ? "xs" : "sm",
+                })}
+                disabled={resetting}
+              >
+                {resetting ? (
+                  <Loader2 className="size-3 animate-spin" />
+                ) : (
+                  <RefreshCw className="size-3" />
+                )}
+                <span className="ml-1">重置</span>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>确认重置额度？</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    将重置 "{subscription.subscriptionPlanName}" 的额度到初始值。每日重置次数有限制。
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>取消</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleReset}>确认重置</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          )}
+        </div>
       </div>
 
       <div className="space-y-1">

@@ -87,6 +87,31 @@ export type {
   RelayPulseTimelinePoint,
 } from "./extensions/relaypulse.ts";
 
+// ===== Services: Smart Auto-Reset =====
+export {
+  shouldResetSubscription,
+  canReset,
+  getResetWindowByTime,
+  getCurrentResetWindow,
+  getNextResetTime,
+  getTimeUntilNextReset,
+  formatCountdown,
+  hasResetInCurrentWindow,
+  RESET_WINDOWS,
+  RESET_COOLDOWN_MS,
+  RESET_WINDOW_DURATION_MS,
+  SmartResetScheduler,
+  createSmartResetScheduler,
+} from "./services/index.ts";
+export type {
+  ResetDecision,
+  ResetEligibility,
+  ResetWindow,
+  ResetTaskResult,
+  SchedulerExecutionResult,
+  SmartResetSchedulerConfig,
+} from "./services/index.ts";
+
 import { Code88Client } from "./client.ts";
 import { Code88Queries } from "./queries.ts";
 

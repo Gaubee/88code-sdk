@@ -1,6 +1,7 @@
 import { Link, useLocation } from "@tanstack/react-router";
 import { Activity, Home, Settings, User } from "lucide-react";
 import { useAccounts } from "@/lib/use-sdk";
+import { useRelayPulseSettings } from "@/lib/service-context";
 import {
   Sidebar,
   SidebarContent,
@@ -24,12 +25,13 @@ interface LayoutProps {
 
 export function Layout({ children }: LayoutProps) {
   const { accounts } = useAccounts();
+  const { enabled: relayPulseEnabled } = useRelayPulseSettings();
   const location = useLocation();
-  const logoUrl = "logo.webp";
+  const logoUrl = `${import.meta.env.BASE_URL}logo.webp`;
 
   return (
     <SidebarProvider defaultOpen={true}>
-      <Sidebar collapsible="offExamples">
+      <Sidebar collapsible="offcanvas">
         <SidebarHeader className="border-b px-4 py-3">
           <div className="flex items-center gap-2">
             <img
@@ -63,22 +65,24 @@ export function Layout({ children }: LayoutProps) {
             </SidebarGroupContent>
           </SidebarGroup>
 
-          <SidebarGroup>
-            <SidebarGroupLabel>扩展</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    render={<Link to="/status" />}
-                    isActive={location.pathname === "/status"}
-                  >
-                    <Activity className="size-4" />
-                    <span>服务状态</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
+          {relayPulseEnabled && (
+            <SidebarGroup>
+              <SidebarGroupLabel>扩展</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      render={<Link to="/status" />}
+                      isActive={location.pathname === "/status"}
+                    >
+                      <Activity className="size-4" />
+                      <span>服务状态</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          )}
 
           {accounts.length > 0 && (
             <SidebarGroup>
@@ -115,7 +119,7 @@ export function Layout({ children }: LayoutProps) {
                 isActive={location.pathname === "/settings"}
               >
                 <Settings className="size-4" />
-                <span>账号设置</span>
+                <span>设置</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>

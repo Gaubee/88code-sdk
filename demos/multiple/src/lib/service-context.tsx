@@ -18,6 +18,7 @@ import {
 import { PollingManager } from "./services/polling-manager";
 import { Code88Service } from "./services/code88-service";
 import { AutoResetService } from "./services/auto-reset-service";
+import { AutoRefreshIntervalProvider } from "./auto-refresh-context";
 
 // ===== Context 类型 =====
 
@@ -72,21 +73,14 @@ export function ServiceProvider({ children }: ServiceProviderProps) {
   const code88 = React.useMemo(() => new Code88Service(), []);
   const autoReset = React.useMemo(() => new AutoResetService(code88), [code88]);
   const pollingManager = React.useMemo(
-    () =>
-      new PollingManager(queryClient, {
-        enabled: false,
-        intervalMs: 5000,
-      }),
+    () => new PollingManager(queryClient, settings.autoRefreshInterval),
     []
   );
 
-  // 同步自动刷新配置到 PollingManager
+  // 同步刷新间隔到 PollingManager（enabled 由页面级 Context 控制）
   React.useEffect(() => {
-    pollingManager.setConfig({
-      enabled: settings.autoRefreshEnabled,
-      intervalMs: settings.autoRefreshInterval,
-    });
-  }, [pollingManager, settings.autoRefreshEnabled, settings.autoRefreshInterval]);
+    pollingManager.setIntervalMs(settings.autoRefreshInterval);
+  }, [pollingManager, settings.autoRefreshInterval]);
 
   const [accounts, setAccounts] = React.useState<Account[]>([]);
   const [currentAccount, setCurrentAccount] = React.useState<Account | null>(null);
@@ -171,7 +165,9 @@ export function ServiceProvider({ children }: ServiceProviderProps) {
 
   return (
     <ServiceContext.Provider value={value}>
-      {children}
+      <AutoRefreshIntervalProvider>
+        {children}
+      </AutoRefreshIntervalProvider>
     </ServiceContext.Provider>
   );
 }

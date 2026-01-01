@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { Plus, Trash2, Eye, EyeOff, Edit2, Check, X, Server, Timer, Activity, Terminal, Copy, Download, Upload, FileJson, Zap } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
-import { useAccounts, useAutoRefresh } from "@/lib/use-sdk";
+import { useAccounts } from "@/lib/use-sdk";
 import type { Account } from "@/lib/accounts-store";
+import { useSettings } from "@/lib/settings-store";
 import { useRelayPulseSettings } from "@/lib/service-context";
 import { REFRESH_INTERVALS, RELAYPULSE_DEFAULT_URL } from "@/lib/settings-store";
 import { useAutoResetSettings } from "@/lib/auto-reset-store";
@@ -48,7 +49,7 @@ const CUSTOM_HOST_VALUE = "__custom__";
 
 export function SettingsPanel() {
   const { accounts, addAccount, removeAccount, updateAccount } = useAccounts();
-  const { enabled: autoRefreshEnabled, interval: autoRefreshInterval, toggle: toggleAutoRefresh, setInterval: setRefreshInterval } = useAutoRefresh();
+  const { settings, setRefreshInterval } = useSettings();
   const { enabled: relayPulseEnabled, baseUrl: relayPulseBaseUrl, setEnabled: setRelayPulseEnabled, setBaseUrl: setRelayPulseBaseUrl } = useRelayPulseSettings();
   const { settings: autoResetSettings, toggleGlobal: toggleAutoReset, lastExecution } = useAutoResetSettings();
   const [copied, setCopied] = useState(false);
@@ -204,27 +205,11 @@ export function SettingsPanel() {
             全局设置
           </CardTitle>
           <CardDescription>
-            配置自动刷新和其他全局选项
+            配置自动刷新间隔（各页面可单独控制开关）
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {/* 自动刷新开关 */}
-            <div className="flex items-center justify-between">
-              <div>
-                <Label htmlFor="auto-refresh-global" className="text-sm font-medium">
-                  自动刷新
-                </Label>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  自动刷新所有数据
-                </p>
-              </div>
-              <Switch
-                id="auto-refresh-global"
-                checked={autoRefreshEnabled}
-                onCheckedChange={toggleAutoRefresh}
-              />
-            </div>
             {/* 刷新间隔 */}
             <div className="flex items-center justify-between">
               <div>
@@ -232,11 +217,11 @@ export function SettingsPanel() {
                   刷新间隔
                 </Label>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  数据自动刷新的时间间隔
+                  自动刷新的时间间隔（页面级开关控制是否启用）
                 </p>
               </div>
               <Select
-                value={String(autoRefreshInterval)}
+                value={String(settings.autoRefreshInterval)}
                 onValueChange={(v) => v && setRefreshInterval(Number(v))}
               >
                 <SelectTrigger className="w-[120px]">

@@ -1,8 +1,9 @@
+import { useState } from "react";
 import { RefreshCw, User, AlertCircle, Loader2 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { getAccountById } from "@/lib/accounts-store";
+import { getAccountById, type Account } from "@/lib/accounts-store";
 import { useLoginInfo, queryKeys } from "@/lib/queries";
-import { useAutoRefresh } from "@/lib/use-sdk";
+import { AutoRefreshEnabledProvider } from "@/lib/auto-refresh-context";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -22,15 +23,7 @@ interface AccountDetailProps {
 
 export function AccountDetail({ accountId }: AccountDetailProps) {
   const account = getAccountById(accountId) ?? null;
-  const queryClient = useQueryClient();
-  const { data: loginInfo, isLoading, error } = useLoginInfo(account);
-  const { enabled: autoRefreshEnabled, toggle: toggleAutoRefresh } = useAutoRefresh();
-
-  const handleRefreshAll = () => {
-    if (account) {
-      queryClient.invalidateQueries({ queryKey: queryKeys.account(account.id) });
-    }
-  };
+  const [autoRefreshEnabled, setAutoRefreshEnabled] = useState(true);
 
   if (!account) {
     return (
@@ -40,6 +33,35 @@ export function AccountDetail({ accountId }: AccountDetailProps) {
       </div>
     );
   }
+
+  return (
+    <AutoRefreshEnabledProvider enabled={autoRefreshEnabled}>
+      <AccountDetailContent
+        account={account}
+        autoRefreshEnabled={autoRefreshEnabled}
+        onAutoRefreshChange={setAutoRefreshEnabled}
+      />
+    </AutoRefreshEnabledProvider>
+  );
+}
+
+interface AccountDetailContentProps {
+  account: Account;
+  autoRefreshEnabled: boolean;
+  onAutoRefreshChange: (enabled: boolean) => void;
+}
+
+function AccountDetailContent({
+  account,
+  autoRefreshEnabled,
+  onAutoRefreshChange,
+}: AccountDetailContentProps) {
+  const queryClient = useQueryClient();
+  const { data: loginInfo, isLoading, error } = useLoginInfo(account);
+
+  const handleRefreshAll = () => {
+    queryClient.invalidateQueries({ queryKey: queryKeys.account(account.id) });
+  };
 
   if (isLoading) {
     return (
@@ -80,7 +102,7 @@ export function AccountDetail({ accountId }: AccountDetailProps) {
               id="auto-refresh-account"
               size="sm"
               checked={autoRefreshEnabled}
-              onCheckedChange={toggleAutoRefresh}
+              onCheckedChange={onAutoRefreshChange}
             />
             <Label htmlFor="auto-refresh-account" className="text-sm text-muted-foreground cursor-pointer">
               自动刷新

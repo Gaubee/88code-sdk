@@ -1,15 +1,15 @@
-import { CreditCard, Loader2, RefreshCw, Zap } from "lucide-react";
-import type { Subscription } from "@gaubee/88code-sdk";
-import { Badge } from "@/components/ui/badge";
-import { buttonVariants } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
+import { CreditCard, Loader2, RefreshCw, Zap } from 'lucide-react'
+import type { Subscription } from '@gaubee/88code-sdk'
+import { Badge } from '@/components/ui/badge'
+import { buttonVariants } from '@/components/ui/button'
+import { Switch } from '@/components/ui/switch'
+import { Label } from '@/components/ui/label'
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip";
+} from '@/components/ui/tooltip'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -20,89 +20,103 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import { useAutoResetSettings } from "@/lib/auto-reset-store";
+} from '@/components/ui/alert-dialog'
+import { useAutoResetSettings } from '@/lib/auto-reset-store'
 
-type SubscriptionPlanType = "MONTHLY" | "PAY_PER_USE";
+type SubscriptionPlanType = 'MONTHLY' | 'PAY_PER_USE'
 
-function getPlanType(planType: string | undefined): SubscriptionPlanType | "UNKNOWN" {
-  if (planType === "MONTHLY") return "MONTHLY";
-  if (planType === "PAY_PER_USE") return "PAY_PER_USE";
-  return "UNKNOWN";
+function getPlanType(
+  planType: string | undefined,
+): SubscriptionPlanType | 'UNKNOWN' {
+  if (planType === 'MONTHLY') return 'MONTHLY'
+  if (planType === 'PAY_PER_USE') return 'PAY_PER_USE'
+  return 'UNKNOWN'
 }
 
 function clampNumber(value: number, min: number, max: number): number {
-  return Math.min(max, Math.max(min, value));
+  return Math.min(max, Math.max(min, value))
 }
 
 /**
  * 订阅额度进度条按“剩余”渲染：剩余越多越满
  * - 负数余额/异常 creditLimit => 视为 0%
  */
-function getRemainingPercent(currentCredits: number, creditLimit: number): number {
-  if (!Number.isFinite(currentCredits) || !Number.isFinite(creditLimit)) return 0;
-  if (creditLimit <= 0) return 0;
-  if (currentCredits <= 0) return 0;
-  const remaining = clampNumber(currentCredits, 0, creditLimit);
-  return (remaining / creditLimit) * 100;
+function getRemainingPercent(
+  currentCredits: number,
+  creditLimit: number,
+): number {
+  if (!Number.isFinite(currentCredits) || !Number.isFinite(creditLimit))
+    return 0
+  if (creditLimit <= 0) return 0
+  if (currentCredits <= 0) return 0
+  const remaining = clampNumber(currentCredits, 0, creditLimit)
+  return (remaining / creditLimit) * 100
 }
 
 export interface SubscriptionPlanCardProps {
-  subscription: Subscription;
-  variant?: "compact" | "detail";
-  resetting?: boolean;
-  onResetCredits?: (subscriptionId: number) => void | Promise<void>;
+  subscription: Subscription
+  variant?: 'compact' | 'detail'
+  resetting?: boolean
+  onResetCredits?: (subscriptionId: number) => void | Promise<void>
 }
 
 export function SubscriptionPlanCard({
   subscription,
-  variant = "detail",
+  variant = 'detail',
   resetting = false,
   onResetCredits,
 }: SubscriptionPlanCardProps) {
-  const creditLimit = subscription.subscriptionPlan?.creditLimit ?? 0;
-  const currentCredits = subscription.currentCredits ?? 0;
-  const remainingPercent = getRemainingPercent(currentCredits, creditLimit);
-  const planType = getPlanType(subscription.subscriptionPlan?.planType);
-  const canReset = planType === "MONTHLY" && typeof onResetCredits === "function";
+  const creditLimit = subscription.subscriptionPlan?.creditLimit ?? 0
+  const currentCredits = subscription.currentCredits ?? 0
+  const remainingPercent = getRemainingPercent(currentCredits, creditLimit)
+  const planType = getPlanType(subscription.subscriptionPlan?.planType)
+  const canReset =
+    planType === 'MONTHLY' && typeof onResetCredits === 'function'
 
-  const showFeatures = variant === "detail";
-  const showResetMeta = planType === "MONTHLY";
+  const showFeatures = variant === 'detail'
+  const showResetMeta = planType === 'MONTHLY'
 
   // 智能自动重置
-  const { settings: autoResetSettings, isEnabled, setSubscriptionEnabled } = useAutoResetSettings();
-  const smartResetEnabled = isEnabled(subscription.id);
-  const canEnableSmartReset = planType === "MONTHLY" && autoResetSettings.enabled;
+  const {
+    settings: autoResetSettings,
+    isEnabled,
+    setSubscriptionEnabled,
+  } = useAutoResetSettings()
+  const smartResetEnabled = isEnabled(subscription.id)
+  const canEnableSmartReset =
+    planType === 'MONTHLY' && autoResetSettings.enabled
 
   const handleReset = async () => {
-    if (!canReset) return;
-    await onResetCredits(subscription.id);
-  };
+    if (!canReset) return
+    await onResetCredits(subscription.id)
+  }
 
   const handleSmartResetToggle = (checked: boolean) => {
-    setSubscriptionEnabled(subscription.id, checked);
-  };
+    setSubscriptionEnabled(subscription.id, checked)
+  }
 
   return (
     <div
       className={
-        variant === "compact"
-          ? "p-3 border rounded-lg bg-muted/30"
-          : "p-4 border rounded-lg"
+        variant === 'compact'
+          ? 'p-3 border rounded-lg bg-muted/30'
+          : 'p-4 border rounded-lg'
       }
     >
       <div className="flex items-start justify-between gap-3 mb-3">
         <div className="min-w-0">
           <div className="font-medium flex items-center gap-2 flex-wrap">
             <CreditCard className="size-4 text-muted-foreground" />
-            <span className="truncate">{subscription.subscriptionPlanName}</span>
-            {subscription.subscriptionStatus === "活跃中" && (
+            <span className="truncate">
+              {subscription.subscriptionPlanName}
+            </span>
+            {subscription.subscriptionStatus === '活跃中' && (
               <Badge variant="default">活跃中</Badge>
             )}
-            {planType === "PAY_PER_USE" && (
+            {planType === 'PAY_PER_USE' && (
               <Badge variant="secondary">按量付费</Badge>
             )}
-            {typeof subscription.remainingDays === "number" && (
+            {typeof subscription.remainingDays === 'number' && (
               <Badge variant="secondary" className="text-xs">
                 {subscription.remainingDays}天
               </Badge>
@@ -112,16 +126,25 @@ export function SubscriptionPlanCard({
             剩余 {subscription.remainingDays ?? 0} 天
             {showResetMeta && (
               <>
-                {" "}
-                | 重置次数: <span className={
-                  (subscription.resetTimes ?? 0) >= 2
-                    ? "text-green-600 dark:text-green-400 font-medium"
-                    : (subscription.resetTimes ?? 0) === 1
-                    ? "text-blue-600 dark:text-blue-400 font-medium"
-                    : ""
-                }>{subscription.resetTimes ?? 0}</span>
+                {' '}
+                | 重置次数:{' '}
+                <span
+                  className={
+                    (subscription.resetTimes ?? 0) >= 2
+                      ? 'text-green-600 dark:text-green-400 font-medium'
+                      : (subscription.resetTimes ?? 0) === 1
+                        ? 'text-blue-600 dark:text-blue-400 font-medium'
+                        : ''
+                  }
+                >
+                  {subscription.resetTimes ?? 0}
+                </span>
                 {subscription.lastCreditReset && (
-                  <> | 上次重置: {new Date(subscription.lastCreditReset).toLocaleString()}</>
+                  <>
+                    {' '}
+                    | 上次重置:{' '}
+                    {new Date(subscription.lastCreditReset).toLocaleString()}
+                  </>
                 )}
               </>
             )}
@@ -135,7 +158,7 @@ export function SubscriptionPlanCard({
 
         <div className="flex items-center gap-2">
           {/* 智能自动重置开关 */}
-          {planType === "MONTHLY" && variant === "detail" && (
+          {planType === 'MONTHLY' && variant === 'detail' && (
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -150,7 +173,9 @@ export function SubscriptionPlanCard({
                     <Label
                       htmlFor={`smart-reset-${subscription.id}`}
                       className={`text-xs cursor-pointer flex items-center gap-1 ${
-                        !autoResetSettings.enabled ? "text-muted-foreground" : ""
+                        !autoResetSettings.enabled
+                          ? 'text-muted-foreground'
+                          : ''
                       }`}
                     >
                       <Zap className="size-3" />
@@ -168,9 +193,7 @@ export function SubscriptionPlanCard({
                       23:55: 兜底重置
                     </p>
                   ) : (
-                    <p className="text-xs">
-                      请先在设置中启用智能自动重置
-                    </p>
+                    <p className="text-xs">请先在设置中启用智能自动重置</p>
                   )}
                 </TooltipContent>
               </Tooltip>
@@ -182,7 +205,7 @@ export function SubscriptionPlanCard({
             <AlertDialog>
               <AlertDialogTrigger
                 className={buttonVariants({
-                  size: variant === "compact" ? "xs" : "sm",
+                  size: variant === 'compact' ? 'xs' : 'sm',
                 })}
                 disabled={resetting}
               >
@@ -197,12 +220,15 @@ export function SubscriptionPlanCard({
                 <AlertDialogHeader>
                   <AlertDialogTitle>确认重置额度？</AlertDialogTitle>
                   <AlertDialogDescription>
-                    将重置 "{subscription.subscriptionPlanName}" 的额度到初始值。每日重置次数有限制。
+                    将重置 "{subscription.subscriptionPlanName}"
+                    的额度到初始值。每日重置次数有限制。
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                   <AlertDialogCancel>取消</AlertDialogCancel>
-                  <AlertDialogAction onClick={handleReset}>确认重置</AlertDialogAction>
+                  <AlertDialogAction onClick={handleReset}>
+                    确认重置
+                  </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
@@ -223,6 +249,5 @@ export function SubscriptionPlanCard({
         </div>
       </div>
     </div>
-  );
+  )
 }
-

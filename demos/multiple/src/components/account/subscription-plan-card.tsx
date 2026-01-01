@@ -99,14 +99,14 @@ export function SubscriptionPlanCard({
     <div
       className={
         variant === 'compact'
-          ? 'p-3 border rounded-lg bg-muted/30'
-          : 'p-4 border rounded-lg'
+          ? 'bg-muted/30 rounded-lg border p-3'
+          : 'rounded-lg border p-4'
       }
     >
-      <div className="flex items-start justify-between gap-3 mb-3">
+      <div className="mb-3 flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <div className="font-medium flex items-center gap-2 flex-wrap">
-            <CreditCard className="size-4 text-muted-foreground" />
+          <div className="flex flex-wrap items-center gap-2 font-medium">
+            <CreditCard className="text-muted-foreground size-4" />
             <span className="truncate">
               {subscription.subscriptionPlanName}
             </span>
@@ -122,7 +122,7 @@ export function SubscriptionPlanCard({
               </Badge>
             )}
           </div>
-          <p className="text-xs text-muted-foreground mt-1">
+          <p className="text-muted-foreground mt-1 text-xs">
             剩余 {subscription.remainingDays ?? 0} 天
             {showResetMeta && (
               <>
@@ -131,9 +131,9 @@ export function SubscriptionPlanCard({
                 <span
                   className={
                     (subscription.resetTimes ?? 0) >= 2
-                      ? 'text-green-600 dark:text-green-400 font-medium'
+                      ? 'font-medium text-green-600 dark:text-green-400'
                       : (subscription.resetTimes ?? 0) === 1
-                        ? 'text-blue-600 dark:text-blue-400 font-medium'
+                        ? 'font-medium text-blue-600 dark:text-blue-400'
                         : ''
                   }
                 >
@@ -150,7 +150,7 @@ export function SubscriptionPlanCard({
             )}
           </p>
           {showFeatures && subscription.subscriptionPlan?.features && (
-            <p className="text-xs text-muted-foreground mt-2 whitespace-pre-wrap">
+            <p className="text-muted-foreground mt-2 text-xs whitespace-pre-wrap">
               {subscription.subscriptionPlan.features}
             </p>
           )}
@@ -172,7 +172,7 @@ export function SubscriptionPlanCard({
                     />
                     <Label
                       htmlFor={`smart-reset-${subscription.id}`}
-                      className={`text-xs cursor-pointer flex items-center gap-1 ${
+                      className={`flex cursor-pointer items-center gap-1 text-xs ${
                         !autoResetSettings.enabled
                           ? 'text-muted-foreground'
                           : ''
@@ -237,13 +237,13 @@ export function SubscriptionPlanCard({
       </div>
 
       <div className="space-y-1">
-        <div className="flex justify-between text-xs text-muted-foreground">
+        <div className="text-muted-foreground flex justify-between text-xs">
           <span>剩余: ${currentCredits.toFixed(2)}</span>
           <span>总额度: ${creditLimit}</span>
         </div>
-        <div className="h-2 bg-muted rounded-full overflow-hidden">
+        <div className="bg-muted h-2 overflow-hidden rounded-full">
           <div
-            className="h-full bg-primary transition-all"
+            className="bg-primary h-full transition-all"
             style={{ width: `${Math.min(remainingPercent, 100)}%` }}
           />
         </div>

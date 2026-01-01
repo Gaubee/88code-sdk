@@ -38,17 +38,17 @@
  */
 
 // 核心客户端
-export { Code88Client } from "./client.ts";
+export { Code88Client } from './client.ts'
 
 // 只读查询（安全）
-export { Code88Queries } from "./queries.ts";
+export { Code88Queries } from './queries.ts'
 
 // 危险操作（隔离）
-export { Code88Mutations, createMutations } from "./mutations.ts";
-export type { MutationResult } from "./mutations.ts";
+export { Code88Mutations, createMutations } from './mutations.ts'
+export type { MutationResult } from './mutations.ts'
 
 // 配置
-export { API_ENDPOINTS, DEFAULT_BASE_URL } from "./config.ts";
+export { API_ENDPOINTS, DEFAULT_BASE_URL } from './config.ts'
 
 // 类型导出
 export type {
@@ -72,10 +72,13 @@ export type {
   SubscriptionPlan,
   UsageTrendParams,
   UsageTrendPoint,
-} from "./types.ts";
+} from './types.ts'
 
 // ===== Extensions =====
-export { RELAYPULSE_BASE_URL, getRelayPulseStatus } from "./extensions/relaypulse.ts";
+export {
+  RELAYPULSE_BASE_URL,
+  getRelayPulseStatus,
+} from './extensions/relaypulse.ts'
 export type {
   RelayPulseBadge,
   RelayPulseBoard,
@@ -85,7 +88,7 @@ export type {
   RelayPulseStatusEntry,
   RelayPulseStatusParams,
   RelayPulseTimelinePoint,
-} from "./extensions/relaypulse.ts";
+} from './extensions/relaypulse.ts'
 
 // ===== Services: Smart Auto-Reset =====
 export {
@@ -102,7 +105,7 @@ export {
   RESET_WINDOW_DURATION_MS,
   SmartResetScheduler,
   createSmartResetScheduler,
-} from "./services/index.ts";
+} from './services/index.ts'
 export type {
   ResetDecision,
   ResetEligibility,
@@ -110,28 +113,28 @@ export type {
   ResetTaskResult,
   SchedulerExecutionResult,
   SmartResetSchedulerConfig,
-} from "./services/index.ts";
+} from './services/index.ts'
 
-import { Code88Client } from "./client.ts";
-import { Code88Queries } from "./queries.ts";
+import { Code88Client } from './client.ts'
+import { Code88Queries } from './queries.ts'
 
 /**
  * 便捷函数：从环境变量创建客户端和查询实例
  *
  * @param envKey 环境变量名，默认 "CODE88_AUTH_TOKEN"
  */
-export function createFromEnv(envKey = "CODE88_AUTH_TOKEN"): {
-  client: Code88Client;
-  queries: Code88Queries;
+export function createFromEnv(envKey = 'CODE88_AUTH_TOKEN'): {
+  client: Code88Client
+  queries: Code88Queries
 } {
-  const authToken = process.env[envKey];
+  const authToken = process.env[envKey]
 
   if (!authToken) {
-    throw new Error(`环境变量 ${envKey} 未设置。请设置您的 88Code authToken。`);
+    throw new Error(`环境变量 ${envKey} 未设置。请设置您的 88Code authToken。`)
   }
 
-  const client = new Code88Client({ authToken });
-  const queries = new Code88Queries(client);
+  const client = new Code88Client({ authToken })
+  const queries = new Code88Queries(client)
 
-  return { client, queries };
+  return { client, queries }
 }

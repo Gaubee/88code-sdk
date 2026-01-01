@@ -13,16 +13,16 @@
  * - 重置操作有冷却时间限制
  */
 
-import { Code88Client } from "./client.ts";
-import { API_ENDPOINTS } from "./config.ts";
-import type { ApiResult } from "./types.ts";
+import { Code88Client } from './client.ts'
+import { API_ENDPOINTS } from './config.ts'
+import type { ApiResult } from './types.ts'
 
 /**
  * 危险操作返回结果
  */
 export interface MutationResult {
-  success: boolean;
-  message?: string;
+  success: boolean
+  message?: string
 }
 
 /**
@@ -45,8 +45,8 @@ export interface MutationResult {
 export class Code88Mutations {
   constructor(private client: Code88Client) {
     console.warn(
-      "[88code-sdk] ⚠️ Code88Mutations 已初始化。请注意：此模块包含会修改数据的危险操作。"
-    );
+      '[88code-sdk] ⚠️ Code88Mutations 已初始化。请注意：此模块包含会修改数据的危险操作。',
+    )
   }
 
   /**
@@ -59,23 +59,25 @@ export class Code88Mutations {
    *
    * @param subscriptionId 订阅 ID
    */
-  async resetCredits(subscriptionId: number): Promise<ApiResult<MutationResult>> {
+  async resetCredits(
+    subscriptionId: number,
+  ): Promise<ApiResult<MutationResult>> {
     console.warn(
-      `[88code-sdk] ⚠️ 正在执行危险操作: resetCredits(${subscriptionId})`
-    );
+      `[88code-sdk] ⚠️ 正在执行危险操作: resetCredits(${subscriptionId})`,
+    )
 
-    const endpoint = API_ENDPOINTS.RESET_CREDITS(subscriptionId);
-    const result = await this.client.post<MutationResult>(endpoint);
+    const endpoint = API_ENDPOINTS.RESET_CREDITS(subscriptionId)
+    const result = await this.client.post<MutationResult>(endpoint)
 
     if (result.success) {
-      console.log(`[88code-sdk] ✅ 额度重置成功: subscriptionId=${subscriptionId}`);
+      console.log(
+        `[88code-sdk] ✅ 额度重置成功: subscriptionId=${subscriptionId}`,
+      )
     } else {
-      console.error(
-        `[88code-sdk] ❌ 额度重置失败: ${result.message}`
-      );
+      console.error(`[88code-sdk] ❌ 额度重置失败: ${result.message}`)
     }
 
-    return result;
+    return result
   }
 
   /**
@@ -90,26 +92,24 @@ export class Code88Mutations {
    */
   async toggleAutoReset(
     subscriptionId: number,
-    autoResetWhenZero: boolean
+    autoResetWhenZero: boolean,
   ): Promise<ApiResult<MutationResult>> {
     console.warn(
-      `[88code-sdk] ⚠️ 正在执行危险操作: toggleAutoReset(${subscriptionId}, ${autoResetWhenZero})`
-    );
+      `[88code-sdk] ⚠️ 正在执行危险操作: toggleAutoReset(${subscriptionId}, ${autoResetWhenZero})`,
+    )
 
-    const endpoint = `${API_ENDPOINTS.AUTO_RESET(subscriptionId)}?autoResetWhenZero=${autoResetWhenZero}`;
-    const result = await this.client.post<MutationResult>(endpoint);
+    const endpoint = `${API_ENDPOINTS.AUTO_RESET(subscriptionId)}?autoResetWhenZero=${autoResetWhenZero}`
+    const result = await this.client.post<MutationResult>(endpoint)
 
     if (result.success) {
       console.log(
-        `[88code-sdk] ✅ 自动重置设置已更新: subscriptionId=${subscriptionId}, autoResetWhenZero=${autoResetWhenZero}`
-      );
+        `[88code-sdk] ✅ 自动重置设置已更新: subscriptionId=${subscriptionId}, autoResetWhenZero=${autoResetWhenZero}`,
+      )
     } else {
-      console.error(
-        `[88code-sdk] ❌ 自动重置设置失败: ${result.message}`
-      );
+      console.error(`[88code-sdk] ❌ 自动重置设置失败: ${result.message}`)
     }
 
-    return result;
+    return result
   }
 }
 
@@ -123,12 +123,12 @@ export class Code88Mutations {
  */
 export function createMutations(
   client: Code88Client,
-  confirm: "I_UNDERSTAND_THE_RISKS"
+  confirm: 'I_UNDERSTAND_THE_RISKS',
 ): Code88Mutations {
-  if (confirm !== "I_UNDERSTAND_THE_RISKS") {
+  if (confirm !== 'I_UNDERSTAND_THE_RISKS') {
     throw new Error(
-      '创建 Mutations 实例需要确认字符串 "I_UNDERSTAND_THE_RISKS"'
-    );
+      '创建 Mutations 实例需要确认字符串 "I_UNDERSTAND_THE_RISKS"',
+    )
   }
-  return new Code88Mutations(client);
+  return new Code88Mutations(client)
 }

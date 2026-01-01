@@ -19,7 +19,7 @@ export {
   type ResetDecision,
   type ResetEligibility,
   type ResetWindow,
-} from "./reset-strategy.ts";
+} from './reset-strategy.ts'
 
 export {
   SmartResetScheduler,
@@ -27,4 +27,4 @@ export {
   type ResetTaskResult,
   type SchedulerExecutionResult,
   type SmartResetSchedulerConfig,
-} from "./smart-reset-scheduler.ts";
+} from './smart-reset-scheduler.ts'

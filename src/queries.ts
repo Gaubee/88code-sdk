@@ -5,8 +5,8 @@
  * 可以安全地用于查询和监控
  */
 
-import { Code88Client } from "./client.ts";
-import { API_ENDPOINTS } from "./config.ts";
+import { Code88Client } from './client.ts'
+import { API_ENDPOINTS } from './config.ts'
 import type {
   ApiKeyInfo,
   ApiKeyQueryParams,
@@ -22,7 +22,7 @@ import type {
   Subscription,
   UsageTrendParams,
   UsageTrendPoint,
-} from "./types.ts";
+} from './types.ts'
 
 /**
  * 只读查询 API
@@ -49,14 +49,14 @@ export class Code88Queries {
    * 获取当前登录用户信息
    */
   async getLoginInfo(): Promise<ApiResult<LoginInfo>> {
-    return this.client.get<LoginInfo>(API_ENDPOINTS.LOGIN_INFO);
+    return this.client.get<LoginInfo>(API_ENDPOINTS.LOGIN_INFO)
   }
 
   /**
    * 获取所有订阅列表（原始数据）
    */
   async getAllSubscriptions(): Promise<ApiResult<Subscription[]>> {
-    return this.client.get<Subscription[]>(API_ENDPOINTS.SUBSCRIPTIONS);
+    return this.client.get<Subscription[]>(API_ENDPOINTS.SUBSCRIPTIONS)
   }
 
   /**
@@ -65,29 +65,29 @@ export class Code88Queries {
    * 只返回 subscriptionStatus === "活跃中" && isActive === true 的订阅
    */
   async getActiveSubscriptions(): Promise<ApiResult<Subscription[]>> {
-    const result = await this.getAllSubscriptions();
+    const result = await this.getAllSubscriptions()
 
     if (result.success && result.data) {
       result.data = result.data.filter(
-        (sub) => sub.subscriptionStatus === "活跃中" && sub.isActive === true,
-      );
+        (sub) => sub.subscriptionStatus === '活跃中' && sub.isActive === true,
+      )
     }
 
-    return result;
+    return result
   }
 
   /**
    * 获取订阅列表（别名，默认返回活跃订阅）
    */
   async getSubscriptions(): Promise<ApiResult<Subscription[]>> {
-    return this.getActiveSubscriptions();
+    return this.getActiveSubscriptions()
   }
 
   /**
    * 获取仪表盘统计数据
    */
   async getDashboard(): Promise<ApiResult<DashboardData>> {
-    return this.client.get<DashboardData>(API_ENDPOINTS.DASHBOARD);
+    return this.client.get<DashboardData>(API_ENDPOINTS.DASHBOARD)
   }
 
   /**
@@ -100,9 +100,9 @@ export class Code88Queries {
   async getUsageTrend(
     params: UsageTrendParams = {},
   ): Promise<ApiResult<UsageTrendPoint[]>> {
-    const { days = 30, granularity = "day" } = params;
-    const endpoint = `${API_ENDPOINTS.USAGE_TREND}?days=${days}&granularity=${granularity}`;
-    return this.client.get<UsageTrendPoint[]>(endpoint);
+    const { days = 30, granularity = 'day' } = params
+    const endpoint = `${API_ENDPOINTS.USAGE_TREND}?days=${days}&granularity=${granularity}`
+    return this.client.get<UsageTrendPoint[]>(endpoint)
   }
 
   /**
@@ -113,7 +113,7 @@ export class Code88Queries {
   async getSubscriptionById(
     subscriptionId: number,
   ): Promise<ApiResult<Subscription | null>> {
-    const result = await this.getAllSubscriptions();
+    const result = await this.getAllSubscriptions()
 
     if (!result.success) {
       return {
@@ -121,15 +121,15 @@ export class Code88Queries {
         data: null,
         message: result.message,
         error: result.error,
-      };
+      }
     }
 
-    const subscription = result.data.find((sub) => sub.id === subscriptionId);
+    const subscription = result.data.find((sub) => sub.id === subscriptionId)
 
     return {
       success: true,
       data: subscription ?? null,
-    };
+    }
   }
 
   /**
@@ -139,19 +139,19 @@ export class Code88Queries {
    */
   async getCreditsOverview(): Promise<
     ApiResult<{
-      totalCredits: number;
-      usedCredits: number;
-      remainingCredits: number;
+      totalCredits: number
+      usedCredits: number
+      remainingCredits: number
       subscriptions: Array<{
-        id: number;
-        name: string;
-        currentCredits: number;
-        creditLimit: number;
-        remainingDays: number;
-      }>;
+        id: number
+        name: string
+        currentCredits: number
+        creditLimit: number
+        remainingDays: number
+      }>
     }>
   > {
-    const result = await this.getActiveSubscriptions();
+    const result = await this.getActiveSubscriptions()
 
     if (!result.success) {
       return {
@@ -159,7 +159,7 @@ export class Code88Queries {
         data: null as never,
         message: result.message,
         error: result.error,
-      };
+      }
     }
 
     const subscriptions = result.data.map((sub) => ({
@@ -168,17 +168,17 @@ export class Code88Queries {
       currentCredits: sub.currentCredits,
       creditLimit: sub.subscriptionPlan.creditLimit,
       remainingDays: sub.remainingDays,
-    }));
+    }))
 
     const totalCredits = subscriptions.reduce(
       (sum, sub) => sum + sub.creditLimit,
       0,
-    );
+    )
     const remainingCredits = subscriptions.reduce(
       (sum, sub) => sum + sub.currentCredits,
       0,
-    );
-    const usedCredits = totalCredits - remainingCredits;
+    )
+    const usedCredits = totalCredits - remainingCredits
 
     return {
       success: true,
@@ -188,7 +188,7 @@ export class Code88Queries {
         remainingCredits,
         subscriptions,
       },
-    };
+    }
   }
 
   // ===== 模型用量时间线 =====
@@ -206,21 +206,20 @@ export class Code88Queries {
   async getModelUsageTimeline(
     params: ModelUsageTimelineParams,
   ): Promise<ApiResult<ModelUsageTimelinePoint[]>> {
-    const { startDate, endDate, granularity = "day" } = params;
+    const { startDate, endDate, granularity = 'day' } = params
 
     const startDateStr =
-      startDate instanceof Date ? startDate.toISOString() : startDate;
-    const endDateStr =
-      endDate instanceof Date ? endDate.toISOString() : endDate;
+      startDate instanceof Date ? startDate.toISOString() : startDate
+    const endDateStr = endDate instanceof Date ? endDate.toISOString() : endDate
 
     const searchParams = new URLSearchParams({
       startDate: startDateStr,
       endDate: endDateStr,
       granularity,
-    });
+    })
 
-    const endpoint = `${API_ENDPOINTS.MODEL_USAGE_TIMELINE}?${searchParams.toString()}`;
-    return this.client.get<ModelUsageTimelinePoint[]>(endpoint);
+    const endpoint = `${API_ENDPOINTS.MODEL_USAGE_TIMELINE}?${searchParams.toString()}`
+    return this.client.get<ModelUsageTimelinePoint[]>(endpoint)
   }
 
   // ===== API Key 管理 =====
@@ -236,21 +235,21 @@ export class Code88Queries {
   async queryApiKeys(
     params: ApiKeyQueryParams = {},
   ): Promise<ApiResult<PagedResponse<ApiKeyInfo>>> {
-    const { pageNum = 1, pageSize = 20, keyword } = params;
+    const { pageNum = 1, pageSize = 20, keyword } = params
 
     const body: Record<string, unknown> = {
       pageNum,
       pageSize,
-    };
+    }
 
     if (keyword) {
-      body.keyword = keyword;
+      body.keyword = keyword
     }
 
     return this.client.post<PagedResponse<ApiKeyInfo>>(
       API_ENDPOINTS.API_KEY_QUERY,
       body,
-    );
+    )
   }
 
   /**
@@ -259,12 +258,12 @@ export class Code88Queries {
    * 会自动遍历所有分页获取完整列表
    */
   async getAllApiKeys(): Promise<ApiResult<ApiKeyInfo[]>> {
-    const allKeys: ApiKeyInfo[] = [];
-    let pageNum = 1;
-    const pageSize = 100;
+    const allKeys: ApiKeyInfo[] = []
+    let pageNum = 1
+    const pageSize = 100
 
     while (true) {
-      const result = await this.queryApiKeys({ pageNum, pageSize });
+      const result = await this.queryApiKeys({ pageNum, pageSize })
 
       if (!result.success) {
         return {
@@ -272,22 +271,22 @@ export class Code88Queries {
           data: allKeys,
           message: result.message,
           error: result.error,
-        };
+        }
       }
 
-      allKeys.push(...result.data.list);
+      allKeys.push(...result.data.list)
 
       if (pageNum >= result.data.pages) {
-        break;
+        break
       }
 
-      pageNum++;
+      pageNum++
     }
 
     return {
       success: true,
       data: allKeys,
-    };
+    }
   }
 
   // ===== Credit 历史记录 =====
@@ -304,22 +303,21 @@ export class Code88Queries {
   async getCreditHistory(
     params: CreditHistoryParams,
   ): Promise<ApiResult<PagedResponse<CreditHistoryItem>>> {
-    const { startTime, endTime, pageNum = 1, pageSize = 20 } = params;
+    const { startTime, endTime, pageNum = 1, pageSize = 20 } = params
 
     const startTimeStr =
-      startTime instanceof Date ? startTime.toISOString() : startTime;
-    const endTimeStr =
-      endTime instanceof Date ? endTime.toISOString() : endTime;
+      startTime instanceof Date ? startTime.toISOString() : startTime
+    const endTimeStr = endTime instanceof Date ? endTime.toISOString() : endTime
 
     const searchParams = new URLSearchParams({
       pageNum: String(pageNum),
       pageSize: String(pageSize),
       startTime: startTimeStr,
       endTime: endTimeStr,
-    });
+    })
 
-    const endpoint = `${API_ENDPOINTS.CREDIT_HISTORY_RANGE}?${searchParams.toString()}`;
-    return this.client.get<PagedResponse<CreditHistoryItem>>(endpoint);
+    const endpoint = `${API_ENDPOINTS.CREDIT_HISTORY_RANGE}?${searchParams.toString()}`
+    return this.client.get<PagedResponse<CreditHistoryItem>>(endpoint)
   }
 
   /**
@@ -328,18 +326,18 @@ export class Code88Queries {
    * @param params 时间范围参数
    */
   async getAllCreditHistory(
-    params: Omit<CreditHistoryParams, "pageNum" | "pageSize">,
+    params: Omit<CreditHistoryParams, 'pageNum' | 'pageSize'>,
   ): Promise<ApiResult<CreditHistoryItem[]>> {
-    const allHistory: CreditHistoryItem[] = [];
-    let pageNum = 1;
-    const pageSize = 100;
+    const allHistory: CreditHistoryItem[] = []
+    let pageNum = 1
+    const pageSize = 100
 
     while (true) {
       const result = await this.getCreditHistory({
         ...params,
         pageNum,
         pageSize,
-      });
+      })
 
       if (!result.success) {
         return {
@@ -347,22 +345,22 @@ export class Code88Queries {
           data: allHistory,
           message: result.message,
           error: result.error,
-        };
+        }
       }
 
-      allHistory.push(...result.data.list);
+      allHistory.push(...result.data.list)
 
       if (pageNum >= result.data.pages) {
-        break;
+        break
       }
 
-      pageNum++;
+      pageNum++
     }
 
     return {
       success: true,
       data: allHistory,
-    };
+    }
   }
 
   // ===== Codex Free 额度 =====
@@ -374,6 +372,6 @@ export class Code88Queries {
    * 额度每天 0:00 自动重置
    */
   async getCodexFreeQuota(): Promise<ApiResult<CodexFreeQuota>> {
-    return this.client.get<CodexFreeQuota>(API_ENDPOINTS.CODEX_FREE_QUOTA);
+    return this.client.get<CodexFreeQuota>(API_ENDPOINTS.CODEX_FREE_QUOTA)
   }
 }

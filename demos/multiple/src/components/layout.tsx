@@ -1,7 +1,7 @@
-import { Link, useLocation } from "@tanstack/react-router";
-import { Activity, Home, Settings, User } from "lucide-react";
-import { useAccounts } from "@/lib/use-sdk";
-import { useRelayPulseSettings } from "@/lib/service-context";
+import { Link, useLocation } from '@tanstack/react-router'
+import { Activity, Home, Settings, User } from 'lucide-react'
+import { useAccounts } from '@/lib/use-sdk'
+import { useRelayPulseSettings } from '@/lib/service-context'
 import {
   Sidebar,
   SidebarContent,
@@ -16,18 +16,18 @@ import {
   SidebarMenuItem,
   SidebarProvider,
   SidebarTrigger,
-} from "@/components/ui/sidebar";
-import { ScrollArea } from "@/components/ui/scroll-area";
+} from '@/components/ui/sidebar'
+import { ScrollArea } from '@/components/ui/scroll-area'
 
 interface LayoutProps {
-  children: React.ReactNode;
+  children: React.ReactNode
 }
 
 export function Layout({ children }: LayoutProps) {
-  const { accounts } = useAccounts();
-  const { enabled: relayPulseEnabled } = useRelayPulseSettings();
-  const location = useLocation();
-  const logoUrl = `${import.meta.env.BASE_URL}logo.webp`;
+  const { accounts } = useAccounts()
+  const { enabled: relayPulseEnabled } = useRelayPulseSettings()
+  const location = useLocation()
+  const logoUrl = `${import.meta.env.BASE_URL}logo.webp`
 
   return (
     <SidebarProvider defaultOpen={true}>
@@ -42,8 +42,12 @@ export function Layout({ children }: LayoutProps) {
               className="rounded-none"
             />
             <div className="min-w-0">
-              <h1 className="font-semibold text-base leading-none">88Code Manager</h1>
-              <p className="text-xs text-muted-foreground mt-1 truncate">多账号管理面板</p>
+              <h1 className="text-base leading-none font-semibold">
+                88Code Manager
+              </h1>
+              <p className="text-muted-foreground mt-1 truncate text-xs">
+                多账号管理面板
+              </p>
             </div>
           </div>
         </SidebarHeader>
@@ -55,7 +59,7 @@ export function Layout({ children }: LayoutProps) {
                 <SidebarMenuItem>
                   <SidebarMenuButton
                     render={<Link to="/" />}
-                    isActive={location.pathname === "/"}
+                    isActive={location.pathname === '/'}
                   >
                     <Home className="size-4" />
                     <span>综合面板</span>
@@ -73,7 +77,7 @@ export function Layout({ children }: LayoutProps) {
                   <SidebarMenuItem>
                     <SidebarMenuButton
                       render={<Link to="/status" />}
-                      isActive={location.pathname === "/status"}
+                      isActive={location.pathname === '/status'}
                     >
                       <Activity className="size-4" />
                       <span>服务状态</span>
@@ -98,7 +102,9 @@ export function Layout({ children }: LayoutProps) {
                             params={{ accountId: account.id }}
                           />
                         }
-                        isActive={location.pathname === `/account/${account.id}`}
+                        isActive={
+                          location.pathname === `/account/${account.id}`
+                        }
                       >
                         <User className="size-4" />
                         <span className="truncate">{account.name}</span>
@@ -116,7 +122,7 @@ export function Layout({ children }: LayoutProps) {
             <SidebarMenuItem>
               <SidebarMenuButton
                 render={<Link to="/settings" />}
-                isActive={location.pathname === "/settings"}
+                isActive={location.pathname === '/settings'}
               >
                 <Settings className="size-4" />
                 <span>设置</span>
@@ -130,15 +136,19 @@ export function Layout({ children }: LayoutProps) {
         {/* 移动端顶部栏 */}
         <header className="flex h-12 shrink-0 items-center gap-2 border-b px-4 md:hidden">
           <SidebarTrigger />
-          <img src={logoUrl} alt="88code" width={20} height={20} className="rounded-none" />
-          <span className="font-semibold text-sm">88Code Manager</span>
+          <img
+            src={logoUrl}
+            alt="88code"
+            width={20}
+            height={20}
+            className="rounded-none"
+          />
+          <span className="text-sm font-semibold">88Code Manager</span>
         </header>
 
         {/* 主内容区 */}
-        <ScrollArea className="flex-1">
-          {children}
-        </ScrollArea>
+        <ScrollArea className="flex-1">{children}</ScrollArea>
       </SidebarInset>
     </SidebarProvider>
-  );
+  )
 }

@@ -3,132 +3,139 @@
  * 每个订阅可以单独启用/禁用
  */
 
-import { useSyncExternalStore, useCallback } from "react";
+import { useSyncExternalStore, useCallback } from 'react'
 
 // ===== 类型定义 =====
 
 export interface AutoResetSettings {
   /** 全局开关 */
-  enabled: boolean;
+  enabled: boolean
   /** 每个订阅的启用状态 (subscriptionId -> enabled) */
-  subscriptionSettings: Record<number, boolean>;
+  subscriptionSettings: Record<number, boolean>
   /** 上次执行结果 */
   lastExecution?: {
-    timestamp: string;
-    window: string;
+    timestamp: string
+    window: string
     results: Array<{
-      subscriptionId: number;
-      subscriptionName: string;
-      success: boolean;
-      reason: string;
-    }>;
-  };
+      subscriptionId: number
+      subscriptionName: string
+      success: boolean
+      reason: string
+    }>
+  }
 }
 
 // ===== 常量 =====
 
-const STORAGE_KEY = "88code-auto-reset";
+const STORAGE_KEY = '88code-auto-reset'
 
 const DEFAULT_SETTINGS: AutoResetSettings = {
   enabled: false,
   subscriptionSettings: {},
-};
+}
 
 // ===== Store 实现 =====
 
-let settings: AutoResetSettings = DEFAULT_SETTINGS;
-let initialized = false;
-const listeners = new Set<() => void>();
+let settings: AutoResetSettings = DEFAULT_SETTINGS
+let initialized = false
+const listeners = new Set<() => void>()
 
 function loadSettings(): AutoResetSettings {
-  if (typeof window === "undefined") {
-    return DEFAULT_SETTINGS;
+  if (typeof window === 'undefined') {
+    return DEFAULT_SETTINGS
   }
   try {
-    const stored = localStorage.getItem(STORAGE_KEY);
+    const stored = localStorage.getItem(STORAGE_KEY)
     if (stored) {
-      const parsed = JSON.parse(stored);
-      return { ...DEFAULT_SETTINGS, ...parsed };
+      const parsed = JSON.parse(stored)
+      return { ...DEFAULT_SETTINGS, ...parsed }
     }
   } catch {
     // 忽略解析错误
   }
-  return DEFAULT_SETTINGS;
+  return DEFAULT_SETTINGS
 }
 
 function ensureInitialized(): void {
-  if (!initialized && typeof window !== "undefined") {
-    settings = loadSettings();
-    initialized = true;
+  if (!initialized && typeof window !== 'undefined') {
+    settings = loadSettings()
+    initialized = true
   }
 }
 
 function saveSettings(newSettings: AutoResetSettings): void {
-  if (typeof window === "undefined") return;
+  if (typeof window === 'undefined') return
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(newSettings));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(newSettings))
   } catch {
     // 忽略存储错误
   }
 }
 
 function subscribe(callback: () => void): () => void {
-  listeners.add(callback);
-  return () => listeners.delete(callback);
+  listeners.add(callback)
+  return () => listeners.delete(callback)
 }
 
 function getSnapshot(): AutoResetSettings {
-  ensureInitialized();
-  return settings;
+  ensureInitialized()
+  return settings
 }
 
 function getServerSnapshot(): AutoResetSettings {
-  return DEFAULT_SETTINGS;
+  return DEFAULT_SETTINGS
 }
 
 function emitChange(): void {
   for (const listener of listeners) {
-    listener();
+    listener()
   }
 }
 
 // ===== 公共 API =====
 
-export function updateAutoResetSettings(partial: Partial<AutoResetSettings>): void {
-  settings = { ...settings, ...partial };
-  saveSettings(settings);
-  emitChange();
+export function updateAutoResetSettings(
+  partial: Partial<AutoResetSettings>,
+): void {
+  settings = { ...settings, ...partial }
+  saveSettings(settings)
+  emitChange()
 }
 
-export function setSubscriptionAutoReset(subscriptionId: number, enabled: boolean): void {
+export function setSubscriptionAutoReset(
+  subscriptionId: number,
+  enabled: boolean,
+): void {
   settings = {
     ...settings,
     subscriptionSettings: {
       ...settings.subscriptionSettings,
       [subscriptionId]: enabled,
     },
-  };
-  saveSettings(settings);
-  emitChange();
+  }
+  saveSettings(settings)
+  emitChange()
 }
 
-export function isSubscriptionAutoResetEnabled(subscriptionId: number): boolean {
-  ensureInitialized();
-  if (!settings.enabled) return false;
-  return settings.subscriptionSettings[subscriptionId] ?? false;
+export function isSubscriptionAutoResetEnabled(
+  subscriptionId: number,
+): boolean {
+  ensureInitialized()
+  if (!settings.enabled) return false
+  return settings.subscriptionSettings[subscriptionId] ?? false
 }
 
 export function setLastExecution(
-  execution: AutoResetSettings["lastExecution"]
+  execution: AutoResetSettings['lastExecution'],
 ): void {
-  settings = { ...settings, lastExecution: execution };
-  saveSettings(settings);
-  emitChange();
+  settings = { ...settings, lastExecution: execution }
+  saveSettings(settings)
+  emitChange()
 }
 
 export function getAutoResetSettings(): AutoResetSettings {
-  ensureInitialized();
-  return settings;
+  ensureInitialized()
+  return settings
 }
 
 // ===== React Hook =====
@@ -137,39 +144,40 @@ export function useAutoResetSettings() {
   const currentSettings = useSyncExternalStore(
     subscribe,
     getSnapshot,
-    getServerSnapshot
-  );
+    getServerSnapshot,
+  )
 
   const toggleGlobal = useCallback(() => {
-    updateAutoResetSettings({ enabled: !currentSettings.enabled });
-  }, [currentSettings.enabled]);
+    updateAutoResetSettings({ enabled: !currentSettings.enabled })
+  }, [currentSettings.enabled])
 
   const setEnabled = useCallback((enabled: boolean) => {
-    updateAutoResetSettings({ enabled });
-  }, []);
+    updateAutoResetSettings({ enabled })
+  }, [])
 
   const toggleSubscription = useCallback(
     (subscriptionId: number) => {
-      const current = currentSettings.subscriptionSettings[subscriptionId] ?? false;
-      setSubscriptionAutoReset(subscriptionId, !current);
+      const current =
+        currentSettings.subscriptionSettings[subscriptionId] ?? false
+      setSubscriptionAutoReset(subscriptionId, !current)
     },
-    [currentSettings.subscriptionSettings]
-  );
+    [currentSettings.subscriptionSettings],
+  )
 
   const setSubscriptionEnabled = useCallback(
     (subscriptionId: number, enabled: boolean) => {
-      setSubscriptionAutoReset(subscriptionId, enabled);
+      setSubscriptionAutoReset(subscriptionId, enabled)
     },
-    []
-  );
+    [],
+  )
 
   const isEnabled = useCallback(
     (subscriptionId: number) => {
-      if (!currentSettings.enabled) return false;
-      return currentSettings.subscriptionSettings[subscriptionId] ?? false;
+      if (!currentSettings.enabled) return false
+      return currentSettings.subscriptionSettings[subscriptionId] ?? false
     },
-    [currentSettings.enabled, currentSettings.subscriptionSettings]
-  );
+    [currentSettings.enabled, currentSettings.subscriptionSettings],
+  )
 
   return {
     settings: currentSettings,
@@ -179,5 +187,5 @@ export function useAutoResetSettings() {
     setSubscriptionEnabled,
     isEnabled,
     lastExecution: currentSettings.lastExecution,
-  };
+  }
 }

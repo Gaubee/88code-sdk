@@ -1,14 +1,17 @@
-import { Card, CardContent } from "@/components/ui/card";
-import { LoadingCard, QueryErrorFallback } from "@/components/ui/card-error-boundary";
-import { useDashboard } from "@/lib/queries";
-import type { Account } from "@/lib/accounts-store";
+import { Card, CardContent } from '@/components/ui/card'
+import {
+  LoadingCard,
+  QueryErrorFallback,
+} from '@/components/ui/card-error-boundary'
+import { useDashboard } from '@/lib/queries'
+import type { Account } from '@/lib/accounts-store'
 
 interface Props {
-  account: Account;
+  account: Account
 }
 
 export function DashboardOverviewCard({ account }: Props) {
-  const { data: dashboard, isLoading, error, refetch } = useDashboard(account);
+  const { data: dashboard, isLoading, error, refetch } = useDashboard(account)
 
   if (isLoading) {
     return (
@@ -17,7 +20,7 @@ export function DashboardOverviewCard({ account }: Props) {
           <LoadingCard key={i} />
         ))}
       </div>
-    );
+    )
   }
 
   if (error) {
@@ -27,23 +30,23 @@ export function DashboardOverviewCard({ account }: Props) {
         error={error}
         onRetry={() => refetch()}
       />
-    );
+    )
   }
 
   if (!dashboard?.overview) {
-    return null;
+    return null
   }
 
-  const overview = dashboard.overview;
+  const overview = dashboard.overview
 
   return (
-    <div className="grid gap-4 md:grid-cols-4 mb-6">
+    <div className="mb-6 grid gap-4 md:grid-cols-4">
       <Card size="sm">
         <CardContent className="pt-4">
           <div className="text-2xl font-bold">
             {overview.activeApiKeys ?? 0}/{overview.totalApiKeys ?? 0}
           </div>
-          <p className="text-xs text-muted-foreground">活跃 API Keys</p>
+          <p className="text-muted-foreground text-xs">活跃 API Keys</p>
         </CardContent>
       </Card>
       <Card size="sm">
@@ -51,7 +54,7 @@ export function DashboardOverviewCard({ account }: Props) {
           <div className="text-2xl font-bold">
             {(overview.totalRequestsUsed ?? 0).toLocaleString()}
           </div>
-          <p className="text-xs text-muted-foreground">总请求数</p>
+          <p className="text-muted-foreground text-xs">总请求数</p>
         </CardContent>
       </Card>
       <Card size="sm">
@@ -59,7 +62,7 @@ export function DashboardOverviewCard({ account }: Props) {
           <div className="text-2xl font-bold">
             {((overview.totalTokensUsed ?? 0) / 1000000).toFixed(2)}M
           </div>
-          <p className="text-xs text-muted-foreground">总 Token 数</p>
+          <p className="text-muted-foreground text-xs">总 Token 数</p>
         </CardContent>
       </Card>
       <Card size="sm">
@@ -67,9 +70,9 @@ export function DashboardOverviewCard({ account }: Props) {
           <div className="text-2xl font-bold">
             ${(overview.cost ?? 0).toFixed(2)}
           </div>
-          <p className="text-xs text-muted-foreground">总费用</p>
+          <p className="text-muted-foreground text-xs">总费用</p>
         </CardContent>
       </Card>
     </div>
-  );
+  )
 }

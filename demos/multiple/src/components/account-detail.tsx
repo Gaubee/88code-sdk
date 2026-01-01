@@ -1,13 +1,13 @@
-import { useState } from "react";
-import { RefreshCw, User, AlertCircle, Loader2 } from "lucide-react";
-import { useQueryClient } from "@tanstack/react-query";
-import { getAccountById, type Account } from "@/lib/accounts-store";
-import { useLoginInfo, queryKeys } from "@/lib/queries";
-import { AutoRefreshEnabledProvider } from "@/lib/auto-refresh-context";
-import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
-import { CardErrorBoundary } from "@/components/ui/card-error-boundary";
+import { useState } from 'react'
+import { RefreshCw, User, AlertCircle, Loader2 } from 'lucide-react'
+import { useQueryClient } from '@tanstack/react-query'
+import { getAccountById, type Account } from '@/lib/accounts-store'
+import { useLoginInfo, queryKeys } from '@/lib/queries'
+import { AutoRefreshEnabledProvider } from '@/lib/auto-refresh-context'
+import { Button } from '@/components/ui/button'
+import { Switch } from '@/components/ui/switch'
+import { Label } from '@/components/ui/label'
+import { CardErrorBoundary } from '@/components/ui/card-error-boundary'
 import {
   DashboardOverviewCard,
   SubscriptionsCard,
@@ -15,23 +15,23 @@ import {
   ApiKeysCard,
   ModelUsageCard,
   CreditHistoryCard,
-} from "@/components/account";
+} from '@/components/account'
 
 interface AccountDetailProps {
-  accountId: string;
+  accountId: string
 }
 
 export function AccountDetail({ accountId }: AccountDetailProps) {
-  const account = getAccountById(accountId) ?? null;
-  const [autoRefreshEnabled, setAutoRefreshEnabled] = useState(true);
+  const account = getAccountById(accountId) ?? null
+  const [autoRefreshEnabled, setAutoRefreshEnabled] = useState(true)
 
   if (!account) {
     return (
-      <div className="flex flex-col items-center justify-center h-full gap-4">
-        <AlertCircle className="size-12 text-destructive" />
+      <div className="flex h-full flex-col items-center justify-center gap-4">
+        <AlertCircle className="text-destructive size-12" />
         <p className="text-destructive">账号不存在</p>
       </div>
-    );
+    )
   }
 
   return (
@@ -42,13 +42,13 @@ export function AccountDetail({ accountId }: AccountDetailProps) {
         onAutoRefreshChange={setAutoRefreshEnabled}
       />
     </AutoRefreshEnabledProvider>
-  );
+  )
 }
 
 interface AccountDetailContentProps {
-  account: Account;
-  autoRefreshEnabled: boolean;
-  onAutoRefreshChange: (enabled: boolean) => void;
+  account: Account
+  autoRefreshEnabled: boolean
+  onAutoRefreshChange: (enabled: boolean) => void
 }
 
 function AccountDetailContent({
@@ -56,37 +56,37 @@ function AccountDetailContent({
   autoRefreshEnabled,
   onAutoRefreshChange,
 }: AccountDetailContentProps) {
-  const queryClient = useQueryClient();
-  const { data: loginInfo, isLoading, error } = useLoginInfo(account);
+  const queryClient = useQueryClient()
+  const { data: loginInfo, isLoading, error } = useLoginInfo(account)
 
   const handleRefreshAll = () => {
-    queryClient.invalidateQueries({ queryKey: queryKeys.account(account.id) });
-  };
+    queryClient.invalidateQueries({ queryKey: queryKeys.account(account.id) })
+  }
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <Loader2 className="size-8 animate-spin text-muted-foreground" />
+      <div className="flex h-full items-center justify-center">
+        <Loader2 className="text-muted-foreground size-8 animate-spin" />
       </div>
-    );
+    )
   }
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center h-full gap-4">
-        <AlertCircle className="size-12 text-destructive" />
+      <div className="flex h-full flex-col items-center justify-center gap-4">
+        <AlertCircle className="text-destructive size-12" />
         <p className="text-destructive">{error.message}</p>
         <Button onClick={handleRefreshAll}>重试</Button>
       </div>
-    );
+    )
   }
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
+    <div className="mx-auto max-w-6xl p-6">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2">
+          <h1 className="flex items-center gap-2 text-2xl font-bold">
             <User className="size-6" />
             {account.name}
           </h1>
@@ -104,12 +104,15 @@ function AccountDetailContent({
               checked={autoRefreshEnabled}
               onCheckedChange={onAutoRefreshChange}
             />
-            <Label htmlFor="auto-refresh-account" className="text-sm text-muted-foreground cursor-pointer">
+            <Label
+              htmlFor="auto-refresh-account"
+              className="text-muted-foreground cursor-pointer text-sm"
+            >
               自动刷新
             </Label>
           </div>
           <Button variant="outline" onClick={handleRefreshAll}>
-            <RefreshCw className="size-4 mr-1" />
+            <RefreshCw className="mr-1 size-4" />
             刷新
           </Button>
         </div>
@@ -146,5 +149,5 @@ function AccountDetailContent({
         <CreditHistoryCard account={account} />
       </CardErrorBoundary>
     </div>
-  );
+  )
 }

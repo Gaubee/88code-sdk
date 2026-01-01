@@ -1,6 +1,6 @@
-import { History } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { History } from 'lucide-react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { ScrollArea } from '@/components/ui/scroll-area'
 import {
   Table,
   TableBody,
@@ -8,20 +8,28 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { LoadingCard, QueryErrorFallback } from "@/components/ui/card-error-boundary";
-import { useCreditHistory } from "@/lib/queries";
-import type { Account } from "@/lib/accounts-store";
+} from '@/components/ui/table'
+import {
+  LoadingCard,
+  QueryErrorFallback,
+} from '@/components/ui/card-error-boundary'
+import { useCreditHistory } from '@/lib/queries'
+import type { Account } from '@/lib/accounts-store'
 
 interface Props {
-  account: Account;
+  account: Account
 }
 
 export function CreditHistoryCard({ account }: Props) {
-  const { data: creditHistory, isLoading, error, refetch } = useCreditHistory(account);
+  const {
+    data: creditHistory,
+    isLoading,
+    error,
+    refetch,
+  } = useCreditHistory(account)
 
   if (isLoading) {
-    return <LoadingCard title="Credit 变更历史" />;
+    return <LoadingCard title="Credit 变更历史" />
   }
 
   if (error) {
@@ -31,24 +39,24 @@ export function CreditHistoryCard({ account }: Props) {
         error={error}
         onRetry={() => refetch()}
       />
-    );
+    )
   }
 
-  const history = creditHistory ?? [];
+  const history = creditHistory ?? []
 
   return (
     <Card className="mt-6">
       <CardHeader>
-        <CardTitle className="text-base flex items-center gap-2">
+        <CardTitle className="flex items-center gap-2 text-base">
           <History className="size-4" />
           Credit 变更历史 (最近 50 条)
         </CardTitle>
       </CardHeader>
       <CardContent>
         {history.length === 0 ? (
-          <p className="text-muted-foreground text-center py-4">暂无历史记录</p>
+          <p className="text-muted-foreground py-4 text-center">暂无历史记录</p>
         ) : (
-          <ScrollArea className="max-h-96">
+          <ScrollArea className="h-96 pr-2">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -63,23 +71,27 @@ export function CreditHistoryCard({ account }: Props) {
                 {history.map((item) => (
                   <TableRow key={item.id}>
                     <TableCell className="font-medium">
-                      {item.description || "-"}
+                      {item.description || '-'}
                     </TableCell>
                     <TableCell className="text-muted-foreground text-xs">
-                      {item.requestModel ?? "-"}
+                      {item.requestModel ?? '-'}
                     </TableCell>
                     <TableCell className="text-muted-foreground text-xs whitespace-nowrap">
-                      {item.createdAt ? new Date(item.createdAt).toLocaleString() : "-"}
+                      {item.createdAt
+                        ? new Date(item.createdAt).toLocaleString()
+                        : '-'}
                     </TableCell>
                     <TableCell
                       className={`text-right whitespace-nowrap ${
-                        (item.creditChange ?? 0) >= 0 ? "text-green-600" : "text-destructive"
+                        (item.creditChange ?? 0) >= 0
+                          ? 'text-green-600'
+                          : 'text-destructive'
                       }`}
                     >
-                      {(item.creditChange ?? 0) >= 0 ? "+" : ""}
-                      ${Math.abs(item.creditChange ?? 0).toFixed(4)}
+                      {(item.creditChange ?? 0) >= 0 ? '+' : ''}$
+                      {Math.abs(item.creditChange ?? 0).toFixed(4)}
                     </TableCell>
-                    <TableCell className="text-right text-muted-foreground whitespace-nowrap">
+                    <TableCell className="text-muted-foreground text-right whitespace-nowrap">
                       ${(item.creditsAfter ?? 0).toFixed(4)}
                     </TableCell>
                   </TableRow>
@@ -90,5 +102,5 @@ export function CreditHistoryCard({ account }: Props) {
         )}
       </CardContent>
     </Card>
-  );
+  )
 }

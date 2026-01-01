@@ -1,24 +1,45 @@
-import { useState } from "react";
-import { Plus, Trash2, Eye, EyeOff, Edit2, Check, X, Server, Timer, Activity, Terminal, Copy, Download, Upload, FileJson, Zap } from "lucide-react";
-import { buttonVariants } from "@/components/ui/button";
-import { useAccounts } from "@/lib/use-sdk";
-import type { Account } from "@/lib/accounts-store";
-import { useSettings } from "@/lib/settings-store";
-import { useRelayPulseSettings } from "@/lib/service-context";
-import { REFRESH_INTERVALS, RELAYPULSE_DEFAULT_URL } from "@/lib/settings-store";
-import { useAutoResetSettings } from "@/lib/auto-reset-store";
-import { RESET_WINDOWS, getNextResetTime, formatCountdown } from "@gaubee/88code-sdk";
-import { DEFAULT_API_HOSTS, DEFAULT_API_HOST } from "@/lib/accounts-store";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
+import { useState } from 'react'
+import {
+  Plus,
+  Trash2,
+  Eye,
+  EyeOff,
+  Edit2,
+  Check,
+  X,
+  Server,
+  Timer,
+  Activity,
+  Terminal,
+  Copy,
+  Download,
+  Upload,
+  FileJson,
+  Zap,
+} from 'lucide-react'
+import { buttonVariants } from '@/components/ui/button'
+import { useAccounts } from '@/lib/use-sdk'
+import type { Account } from '@/lib/accounts-store'
+import { useSettings } from '@/lib/settings-store'
+import { useRelayPulseSettings } from '@/lib/service-context'
+import { REFRESH_INTERVALS, RELAYPULSE_DEFAULT_URL } from '@/lib/settings-store'
+import { useAutoResetSettings } from '@/lib/auto-reset-store'
+import {
+  RESET_WINDOWS,
+  getNextResetTime,
+  formatCountdown,
+} from '@gaubee/88code-sdk'
+import { DEFAULT_API_HOSTS, DEFAULT_API_HOST } from '@/lib/accounts-store'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Switch } from '@/components/ui/switch'
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
+} from '@/components/ui/card'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,178 +50,194 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import { Label } from "@/components/ui/label";
+} from '@/components/ui/alert-dialog'
+import { Label } from '@/components/ui/label'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from '@/components/ui/select'
 import {
   InputGroup,
   InputGroupAddon,
   InputGroupButton,
   InputGroupTextarea,
-} from "@/components/ui/input-group";
+} from '@/components/ui/input-group'
 
-const CUSTOM_HOST_VALUE = "__custom__";
+const CUSTOM_HOST_VALUE = '__custom__'
 
 export function SettingsPanel() {
-  const { accounts, addAccount, removeAccount, updateAccount } = useAccounts();
-  const { settings, setRefreshInterval } = useSettings();
-  const { enabled: relayPulseEnabled, baseUrl: relayPulseBaseUrl, setEnabled: setRelayPulseEnabled, setBaseUrl: setRelayPulseBaseUrl } = useRelayPulseSettings();
-  const { settings: autoResetSettings, toggleGlobal: toggleAutoReset, lastExecution } = useAutoResetSettings();
-  const [copied, setCopied] = useState(false);
-  const [importExportDialogOpen, setImportExportDialogOpen] = useState(false);
-  const [importExportText, setImportExportText] = useState("");
-  const [importExportCopied, setImportExportCopied] = useState(false);
+  const { accounts, addAccount, removeAccount, updateAccount } = useAccounts()
+  const { settings, setRefreshInterval } = useSettings()
+  const {
+    enabled: relayPulseEnabled,
+    baseUrl: relayPulseBaseUrl,
+    setEnabled: setRelayPulseEnabled,
+    setBaseUrl: setRelayPulseBaseUrl,
+  } = useRelayPulseSettings()
+  const {
+    settings: autoResetSettings,
+    toggleGlobal: toggleAutoReset,
+    lastExecution,
+  } = useAutoResetSettings()
+  const [copied, setCopied] = useState(false)
+  const [importExportDialogOpen, setImportExportDialogOpen] = useState(false)
+  const [importExportText, setImportExportText] = useState('')
+  const [importExportCopied, setImportExportCopied] = useState(false)
 
-  const proxyCommand = "npx @gaubee/88code-sdk plugin RelayPulse";
+  const proxyCommand = 'npx @gaubee/88code-sdk plugin RelayPulse'
   const copyCommand = async () => {
-    await navigator.clipboard.writeText(proxyCommand);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-  const [newName, setNewName] = useState("");
-  const [newToken, setNewToken] = useState("");
-  const [newApiHost, setNewApiHost] = useState<string>(DEFAULT_API_HOST);
-  const [customApiHost, setCustomApiHost] = useState("");
-  const [showTokens, setShowTokens] = useState<Set<string>>(new Set());
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editName, setEditName] = useState("");
-  const [editingHostId, setEditingHostId] = useState<string | null>(null);
-  const [editApiHost, setEditApiHost] = useState("");
-  const [editCustomApiHost, setEditCustomApiHost] = useState("");
+    await navigator.clipboard.writeText(proxyCommand)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+  const [newName, setNewName] = useState('')
+  const [newToken, setNewToken] = useState('')
+  const [newApiHost, setNewApiHost] = useState<string>(DEFAULT_API_HOST)
+  const [customApiHost, setCustomApiHost] = useState('')
+  const [showTokens, setShowTokens] = useState<Set<string>>(new Set())
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editName, setEditName] = useState('')
+  const [editingHostId, setEditingHostId] = useState<string | null>(null)
+  const [editApiHost, setEditApiHost] = useState('')
+  const [editCustomApiHost, setEditCustomApiHost] = useState('')
 
   const getEffectiveApiHost = (host: string, custom: string) => {
     if (host === CUSTOM_HOST_VALUE) {
-      return custom.trim() || DEFAULT_API_HOST;
+      return custom.trim() || DEFAULT_API_HOST
     }
-    return host;
-  };
+    return host
+  }
 
   const handleAdd = () => {
-    if (!newName.trim() || !newToken.trim()) return;
-    const apiHost = getEffectiveApiHost(newApiHost, customApiHost);
-    addAccount(newName.trim(), newToken.trim(), apiHost);
-    setNewName("");
-    setNewToken("");
-    setNewApiHost(DEFAULT_API_HOST);
-    setCustomApiHost("");
-  };
+    if (!newName.trim() || !newToken.trim()) return
+    const apiHost = getEffectiveApiHost(newApiHost, customApiHost)
+    addAccount(newName.trim(), newToken.trim(), apiHost)
+    setNewName('')
+    setNewToken('')
+    setNewApiHost(DEFAULT_API_HOST)
+    setCustomApiHost('')
+  }
 
   const isKnownHost = (host: string) =>
-    DEFAULT_API_HOSTS.some((h) => h.value === host);
+    DEFAULT_API_HOSTS.some((h) => h.value === host)
 
   const startEditingHost = (id: string, currentHost: string) => {
-    setEditingHostId(id);
+    setEditingHostId(id)
     if (isKnownHost(currentHost)) {
-      setEditApiHost(currentHost);
-      setEditCustomApiHost("");
+      setEditApiHost(currentHost)
+      setEditCustomApiHost('')
     } else {
-      setEditApiHost(CUSTOM_HOST_VALUE);
-      setEditCustomApiHost(currentHost);
+      setEditApiHost(CUSTOM_HOST_VALUE)
+      setEditCustomApiHost(currentHost)
     }
-  };
+  }
 
   const saveHostEdit = (id: string) => {
-    const apiHost = getEffectiveApiHost(editApiHost, editCustomApiHost);
-    updateAccount(id, { apiHost });
-    setEditingHostId(null);
-    setEditApiHost("");
-    setEditCustomApiHost("");
-  };
+    const apiHost = getEffectiveApiHost(editApiHost, editCustomApiHost)
+    updateAccount(id, { apiHost })
+    setEditingHostId(null)
+    setEditApiHost('')
+    setEditCustomApiHost('')
+  }
 
   const cancelHostEdit = () => {
-    setEditingHostId(null);
-    setEditApiHost("");
-    setEditCustomApiHost("");
-  };
+    setEditingHostId(null)
+    setEditApiHost('')
+    setEditCustomApiHost('')
+  }
 
   const toggleTokenVisibility = (id: string) => {
     setShowTokens((prev) => {
-      const next = new Set(prev);
+      const next = new Set(prev)
       if (next.has(id)) {
-        next.delete(id);
+        next.delete(id)
       } else {
-        next.add(id);
+        next.add(id)
       }
-      return next;
-    });
-  };
+      return next
+    })
+  }
 
   const startEditing = (id: string, currentName: string) => {
-    setEditingId(id);
-    setEditName(currentName);
-  };
+    setEditingId(id)
+    setEditName(currentName)
+  }
 
   const saveEdit = (id: string) => {
     if (editName.trim()) {
-      updateAccount(id, { name: editName.trim() });
+      updateAccount(id, { name: editName.trim() })
     }
-    setEditingId(null);
-  };
+    setEditingId(null)
+  }
 
   const cancelEdit = () => {
-    setEditingId(null);
-    setEditName("");
-  };
+    setEditingId(null)
+    setEditName('')
+  }
 
   const maskToken = (token: string) => {
-    if (token.length <= 12) return "*".repeat(token.length);
-    return token.slice(0, 6) + "..." + token.slice(-6);
-  };
+    if (token.length <= 12) return '*'.repeat(token.length)
+    return token.slice(0, 6) + '...' + token.slice(-6)
+  }
 
   const openImportExportDialog = () => {
     const exportData = accounts.map(({ name, token, apiHost }) => ({
       name,
       token,
       apiHost,
-    }));
-    setImportExportText(JSON.stringify(exportData, null, 2));
-    setImportExportCopied(false);
-    setImportExportDialogOpen(true);
-  };
+    }))
+    setImportExportText(JSON.stringify(exportData, null, 2))
+    setImportExportCopied(false)
+    setImportExportDialogOpen(true)
+  }
 
   const copyImportExportText = async () => {
-    await navigator.clipboard.writeText(importExportText);
-    setImportExportCopied(true);
-    setTimeout(() => setImportExportCopied(false), 2000);
-  };
+    await navigator.clipboard.writeText(importExportText)
+    setImportExportCopied(true)
+    setTimeout(() => setImportExportCopied(false), 2000)
+  }
 
   const handleImport = () => {
     try {
-      const data = JSON.parse(importExportText) as Array<{ name: string; token: string; apiHost?: string }>;
-      if (!Array.isArray(data)) throw new Error("格式错误");
-      let imported = 0;
+      const data = JSON.parse(importExportText) as Array<{
+        name: string
+        token: string
+        apiHost?: string
+      }>
+      if (!Array.isArray(data)) throw new Error('格式错误')
+      let imported = 0
       for (const item of data) {
         if (item.name && item.token) {
-          addAccount(item.name, item.token, item.apiHost || DEFAULT_API_HOST);
-          imported++;
+          addAccount(item.name, item.token, item.apiHost || DEFAULT_API_HOST)
+          imported++
         }
       }
-      alert(`成功导入 ${imported} 个账号`);
-      setImportExportDialogOpen(false);
+      alert(`成功导入 ${imported} 个账号`)
+      setImportExportDialogOpen(false)
     } catch (err) {
-      alert("导入失败：" + (err instanceof Error ? err.message : "JSON 格式错误"));
+      alert(
+        '导入失败：' + (err instanceof Error ? err.message : 'JSON 格式错误'),
+      )
     }
-  };
+  }
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
+    <div className="mx-auto max-w-4xl p-6">
       <div className="mb-8">
         <h1 className="text-2xl font-bold">设置</h1>
         <p className="text-muted-foreground">
-          管理您的 88Code 账号，添加或删除账号以便统一管理 · v{import.meta.env.APP_VERSION}
+          管理您的 88Code 账号，添加或删除账号以便统一管理 · v
+          {import.meta.env.APP_VERSION}
         </p>
       </div>
 
       {/* 全局设置 */}
       <Card className="mb-6">
         <CardHeader>
-          <CardTitle className="text-base flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 text-base">
             <Timer className="size-4" />
             全局设置
           </CardTitle>
@@ -213,10 +250,8 @@ export function SettingsPanel() {
             {/* 刷新间隔 */}
             <div className="flex items-center justify-between">
               <div>
-                <Label className="text-sm font-medium">
-                  刷新间隔
-                </Label>
-                <p className="text-xs text-muted-foreground mt-0.5">
+                <Label className="text-sm font-medium">刷新间隔</Label>
+                <p className="text-muted-foreground mt-0.5 text-xs">
                   自动刷新的时间间隔（页面级开关控制是否启用）
                 </p>
               </div>
@@ -229,7 +264,10 @@ export function SettingsPanel() {
                 </SelectTrigger>
                 <SelectContent>
                   {REFRESH_INTERVALS.map((interval) => (
-                    <SelectItem key={interval.value} value={String(interval.value)}>
+                    <SelectItem
+                      key={interval.value}
+                      value={String(interval.value)}
+                    >
                       {interval.label}
                     </SelectItem>
                   ))}
@@ -243,7 +281,7 @@ export function SettingsPanel() {
       {/* 智能自动重置 */}
       <Card className="mb-6">
         <CardHeader>
-          <CardTitle className="text-base flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 text-base">
             <Zap className="size-4" />
             智能自动重置
           </CardTitle>
@@ -256,10 +294,13 @@ export function SettingsPanel() {
             {/* 全局开关 */}
             <div className="flex items-center justify-between">
               <div>
-                <Label htmlFor="auto-reset-global" className="text-sm font-medium">
+                <Label
+                  htmlFor="auto-reset-global"
+                  className="text-sm font-medium"
+                >
                   启用智能自动重置
                 </Label>
-                <p className="text-xs text-muted-foreground mt-0.5">
+                <p className="text-muted-foreground mt-0.5 text-xs">
                   开启后可在订阅卡片中为每个订阅单独配置
                 </p>
               </div>
@@ -271,31 +312,38 @@ export function SettingsPanel() {
             </div>
 
             {/* 重置策略说明 */}
-            <div className="rounded-lg border bg-muted/50 p-4">
+            <div className="bg-muted/50 rounded-lg border p-4">
               <div className="flex items-start gap-3">
-                <Zap className="size-5 text-amber-500 mt-0.5 shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium mb-2">重置策略</p>
-                  <div className="space-y-2 text-xs text-muted-foreground">
+                <Zap className="mt-0.5 size-5 shrink-0 text-amber-500" />
+                <div className="min-w-0 flex-1">
+                  <p className="mb-2 text-sm font-medium">重置策略</p>
+                  <div className="text-muted-foreground space-y-2 text-xs">
                     <div className="flex items-center gap-2">
-                      <span className="font-mono bg-background px-1.5 py-0.5 rounded border">18:55</span>
+                      <span className="bg-background rounded border px-1.5 py-0.5 font-mono">
+                        18:55
+                      </span>
                       <span>优先窗口 - 剩余≥2次时重置，保留1次给晚间</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="font-mono bg-background px-1.5 py-0.5 rounded border">23:55</span>
+                      <span className="bg-background rounded border px-1.5 py-0.5 font-mono">
+                        23:55
+                      </span>
                       <span>兜底窗口 - 无条件重置，确保每日重置</span>
                     </div>
                   </div>
                   {(() => {
-                    const next = getNextResetTime();
-                    if (!next) return null;
-                    const msUntil = next.time.getTime() - Date.now();
+                    const next = getNextResetTime()
+                    if (!next) return null
+                    const msUntil = next.time.getTime() - Date.now()
                     return (
-                      <p className="text-xs text-muted-foreground mt-3">
-                        下次重置窗口: <span className="font-medium text-foreground">{next.time.toLocaleTimeString()}</span>
-                        {" "}({formatCountdown(msUntil)})
+                      <p className="text-muted-foreground mt-3 text-xs">
+                        下次重置窗口:{' '}
+                        <span className="text-foreground font-medium">
+                          {next.time.toLocaleTimeString()}
+                        </span>{' '}
+                        ({formatCountdown(msUntil)})
                       </p>
-                    );
+                    )
                   })()}
                 </div>
               </div>
@@ -304,24 +352,33 @@ export function SettingsPanel() {
             {/* 上次执行结果 */}
             {lastExecution && (
               <div className="rounded-lg border p-4">
-                <p className="text-sm font-medium mb-2">上次执行</p>
-                <p className="text-xs text-muted-foreground mb-2">
-                  {new Date(lastExecution.timestamp).toLocaleString()} · 窗口 {lastExecution.window}
+                <p className="mb-2 text-sm font-medium">上次执行</p>
+                <p className="text-muted-foreground mb-2 text-xs">
+                  {new Date(lastExecution.timestamp).toLocaleString()} · 窗口{' '}
+                  {lastExecution.window}
                 </p>
                 {lastExecution.results.length > 0 ? (
                   <div className="space-y-1">
                     {lastExecution.results.map((r, i) => (
                       <div key={i} className="flex items-center gap-2 text-xs">
-                        <span className={r.success ? "text-green-600" : "text-muted-foreground"}>
-                          {r.success ? "✓" : "○"}
+                        <span
+                          className={
+                            r.success
+                              ? 'text-green-600'
+                              : 'text-muted-foreground'
+                          }
+                        >
+                          {r.success ? '✓' : '○'}
                         </span>
                         <span>{r.subscriptionName}</span>
-                        <span className="text-muted-foreground">- {r.reason}</span>
+                        <span className="text-muted-foreground">
+                          - {r.reason}
+                        </span>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <p className="text-xs text-muted-foreground">无需重置</p>
+                  <p className="text-muted-foreground text-xs">无需重置</p>
                 )}
               </div>
             )}
@@ -332,7 +389,7 @@ export function SettingsPanel() {
       {/* RelayPulse 服务状态 */}
       <Card className="mb-6">
         <CardHeader>
-          <CardTitle className="text-base flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 text-base">
             <Activity className="size-4" />
             RelayPulse 服务状态
           </CardTitle>
@@ -345,10 +402,13 @@ export function SettingsPanel() {
             {/* 启用开关 */}
             <div className="flex items-center justify-between">
               <div>
-                <Label htmlFor="relaypulse-enabled" className="text-sm font-medium">
+                <Label
+                  htmlFor="relaypulse-enabled"
+                  className="text-sm font-medium"
+                >
                   启用服务状态监控
                 </Label>
-                <p className="text-xs text-muted-foreground mt-0.5">
+                <p className="text-muted-foreground mt-0.5 text-xs">
                   在仪表盘显示 API 服务可用性状态
                 </p>
               </div>
@@ -360,17 +420,17 @@ export function SettingsPanel() {
             </div>
 
             {/* 本地代理说明 */}
-            <div className="rounded-lg border bg-muted/50 p-4">
+            <div className="bg-muted/50 rounded-lg border p-4">
               <div className="flex items-start gap-3">
-                <Terminal className="size-5 text-muted-foreground mt-0.5 shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium mb-1">本地代理模式</p>
-                  <p className="text-xs text-muted-foreground mb-3">
-                    由于浏览器跨域限制，需要启动本地代理服务来获取 RelayPulse 数据。
-                    在终端运行以下命令：
+                <Terminal className="text-muted-foreground mt-0.5 size-5 shrink-0" />
+                <div className="min-w-0 flex-1">
+                  <p className="mb-1 text-sm font-medium">本地代理模式</p>
+                  <p className="text-muted-foreground mb-3 text-xs">
+                    由于浏览器跨域限制，需要启动本地代理服务来获取 RelayPulse
+                    数据。 在终端运行以下命令：
                   </p>
                   <div className="flex items-center gap-2">
-                    <code className="flex-1 bg-background rounded px-3 py-2 text-xs font-mono border">
+                    <code className="bg-background flex-1 rounded border px-3 py-2 font-mono text-xs">
                       {proxyCommand}
                     </code>
                     <Button
@@ -379,10 +439,14 @@ export function SettingsPanel() {
                       onClick={copyCommand}
                       className="shrink-0"
                     >
-                      {copied ? <Check className="size-3" /> : <Copy className="size-3" />}
+                      {copied ? (
+                        <Check className="size-3" />
+                      ) : (
+                        <Copy className="size-3" />
+                      )}
                     </Button>
                   </div>
-                  <p className="text-xs text-muted-foreground mt-2">
+                  <p className="text-muted-foreground mt-2 text-xs">
                     代理启动后会显示本地地址，将地址填入下方配置
                   </p>
                 </div>
@@ -391,16 +455,15 @@ export function SettingsPanel() {
 
             {/* 自定义地址 */}
             <div className="space-y-2">
-              <Label className="text-sm font-medium">
-                API 地址
-              </Label>
+              <Label className="text-sm font-medium">API 地址</Label>
               <Input
                 placeholder={RELAYPULSE_DEFAULT_URL}
                 value={relayPulseBaseUrl}
                 onChange={(e) => setRelayPulseBaseUrl(e.target.value)}
               />
-              <p className="text-xs text-muted-foreground">
-                留空使用默认地址 ({RELAYPULSE_DEFAULT_URL})，或填入本地代理地址 (如 http://localhost:3000)
+              <p className="text-muted-foreground text-xs">
+                留空使用默认地址 ({RELAYPULSE_DEFAULT_URL})，或填入本地代理地址
+                (如 http://localhost:3000)
               </p>
             </div>
           </div>
@@ -417,14 +480,14 @@ export function SettingsPanel() {
             </CardDescription>
           </div>
           <Button variant="outline" size="sm" onClick={openImportExportDialog}>
-            <FileJson className="size-4 mr-1" />
+            <FileJson className="mr-1 size-4" />
             导入/导出
           </Button>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 sm:grid-cols-[1fr_2fr_1fr_auto]">
             <div>
-              <Label htmlFor="name" className="text-xs mb-1 block">
+              <Label htmlFor="name" className="mb-1 block text-xs">
                 账号名称
               </Label>
               <Input
@@ -435,7 +498,7 @@ export function SettingsPanel() {
               />
             </div>
             <div>
-              <Label htmlFor="token" className="text-xs mb-1 block">
+              <Label htmlFor="token" className="mb-1 block text-xs">
                 Auth Token
               </Label>
               <Input
@@ -447,8 +510,11 @@ export function SettingsPanel() {
               />
             </div>
             <div>
-              <Label className="text-xs mb-1 block">API Host</Label>
-              <Select value={newApiHost} onValueChange={(v) => v && setNewApiHost(v)}>
+              <Label className="mb-1 block text-xs">API Host</Label>
+              <Select
+                value={newApiHost}
+                onValueChange={(v) => v && setNewApiHost(v)}
+              >
                 <SelectTrigger className="w-full">
                   <SelectValue />
                 </SelectTrigger>
@@ -475,12 +541,12 @@ export function SettingsPanel() {
                 onClick={handleAdd}
                 disabled={!newName.trim() || !newToken.trim()}
               >
-                <Plus className="size-4 mr-1" />
+                <Plus className="mr-1 size-4" />
                 添加
               </Button>
             </div>
           </div>
-          <p className="text-xs text-muted-foreground mt-3">
+          <p className="text-muted-foreground mt-3 text-xs">
             获取方式：登录 88code.ai → 打开浏览器开发者工具 (F12) → Application
             → Local Storage → 找到 authToken
           </p>
@@ -497,7 +563,7 @@ export function SettingsPanel() {
         </CardHeader>
         <CardContent>
           {accounts.length === 0 ? (
-            <p className="text-center text-muted-foreground py-8">
+            <p className="text-muted-foreground py-8 text-center">
               暂无账号，请添加您的第一个 88Code 账号
             </p>
           ) : (
@@ -505,10 +571,10 @@ export function SettingsPanel() {
               {accounts.map((account) => (
                 <div
                   key={account.id}
-                  className="flex items-center gap-3 p-3 rounded-lg border bg-card"
+                  className="bg-card flex items-center gap-3 rounded-lg border p-3"
                 >
                   {/* 名称 */}
-                  <div className="flex-1 min-w-0">
+                  <div className="min-w-0 flex-1">
                     {editingId === account.id ? (
                       <div className="flex items-center gap-2">
                         <Input
@@ -534,7 +600,7 @@ export function SettingsPanel() {
                       </div>
                     ) : (
                       <div className="flex items-center gap-2">
-                        <span className="font-medium truncate">
+                        <span className="truncate font-medium">
                           {account.name}
                         </span>
                         <Button
@@ -546,8 +612,8 @@ export function SettingsPanel() {
                         </Button>
                       </div>
                     )}
-                    <div className="flex items-center gap-2 mt-1">
-                      <code className="text-xs text-muted-foreground font-mono">
+                    <div className="mt-1 flex items-center gap-2">
+                      <code className="text-muted-foreground font-mono text-xs">
                         {showTokens.has(account.id)
                           ? account.token
                           : maskToken(account.token)}
@@ -566,8 +632,11 @@ export function SettingsPanel() {
                     </div>
                     {/* API Host */}
                     {editingHostId === account.id ? (
-                      <div className="flex items-center gap-2 mt-1">
-                        <Select value={editApiHost} onValueChange={(v) => v && setEditApiHost(v)}>
+                      <div className="mt-1 flex items-center gap-2">
+                        <Select
+                          value={editApiHost}
+                          onValueChange={(v) => v && setEditApiHost(v)}
+                        >
                           <SelectTrigger className="h-7 text-xs">
                             <SelectValue />
                           </SelectTrigger>
@@ -577,7 +646,9 @@ export function SettingsPanel() {
                                 {host.label}
                               </SelectItem>
                             ))}
-                            <SelectItem value={CUSTOM_HOST_VALUE}>自定义...</SelectItem>
+                            <SelectItem value={CUSTOM_HOST_VALUE}>
+                              自定义...
+                            </SelectItem>
                           </SelectContent>
                         </Select>
                         {editApiHost === CUSTOM_HOST_VALUE && (
@@ -585,7 +656,9 @@ export function SettingsPanel() {
                             className="h-7 text-xs"
                             placeholder="https://..."
                             value={editCustomApiHost}
-                            onChange={(e) => setEditCustomApiHost(e.target.value)}
+                            onChange={(e) =>
+                              setEditCustomApiHost(e.target.value)
+                            }
                           />
                         )}
                         <Button
@@ -604,15 +677,20 @@ export function SettingsPanel() {
                         </Button>
                       </div>
                     ) : (
-                      <div className="flex items-center gap-2 mt-1">
-                        <Server className="size-3 text-muted-foreground" />
-                        <span className="text-xs text-muted-foreground">
+                      <div className="mt-1 flex items-center gap-2">
+                        <Server className="text-muted-foreground size-3" />
+                        <span className="text-muted-foreground text-xs">
                           {account.apiHost || DEFAULT_API_HOST}
                         </span>
                         <Button
                           size="icon-xs"
                           variant="ghost"
-                          onClick={() => startEditingHost(account.id, account.apiHost || DEFAULT_API_HOST)}
+                          onClick={() =>
+                            startEditingHost(
+                              account.id,
+                              account.apiHost || DEFAULT_API_HOST,
+                            )
+                          }
                         >
                           <Edit2 className="size-3" />
                         </Button>
@@ -626,8 +704,8 @@ export function SettingsPanel() {
                       render={
                         <button
                           className={buttonVariants({
-                            size: "icon-sm",
-                            variant: "destructive",
+                            size: 'icon-sm',
+                            variant: 'destructive',
                           })}
                         >
                           <Trash2 className="size-4" />
@@ -659,7 +737,10 @@ export function SettingsPanel() {
       </Card>
 
       {/* 导入/导出 Dialog */}
-      <AlertDialog open={importExportDialogOpen} onOpenChange={setImportExportDialogOpen}>
+      <AlertDialog
+        open={importExportDialogOpen}
+        onOpenChange={setImportExportDialogOpen}
+      >
         <AlertDialogContent className="max-w-2xl">
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2">
@@ -679,10 +760,17 @@ export function SettingsPanel() {
                 className="font-mono text-xs"
                 placeholder='[{"name": "账号名", "token": "authToken", "apiHost": "https://88code.ai"}]'
               />
-              <InputGroupAddon align="block-end" className="border-t justify-end">
+              <InputGroupAddon
+                align="block-end"
+                className="justify-end border-t"
+              >
                 <InputGroupButton onClick={copyImportExportText}>
-                  {importExportCopied ? <Check className="size-3" /> : <Copy className="size-3" />}
-                  {importExportCopied ? "已复制" : "复制"}
+                  {importExportCopied ? (
+                    <Check className="size-3" />
+                  ) : (
+                    <Copy className="size-3" />
+                  )}
+                  {importExportCopied ? '已复制' : '复制'}
                 </InputGroupButton>
               </InputGroupAddon>
             </InputGroup>
@@ -690,12 +778,12 @@ export function SettingsPanel() {
           <AlertDialogFooter>
             <AlertDialogCancel>取消</AlertDialogCancel>
             <Button onClick={handleImport}>
-              <Upload className="size-4 mr-1" />
+              <Upload className="mr-1 size-4" />
               导入
             </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
     </div>
-  );
+  )
 }

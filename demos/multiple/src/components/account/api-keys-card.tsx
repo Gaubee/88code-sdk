@@ -1,19 +1,22 @@
-import { Key } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { LoadingCard, QueryErrorFallback } from "@/components/ui/card-error-boundary";
-import { useApiKeys } from "@/lib/queries";
-import type { Account } from "@/lib/accounts-store";
+import { Key } from 'lucide-react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { ScrollArea } from '@/components/ui/scroll-area'
+import {
+  LoadingCard,
+  QueryErrorFallback,
+} from '@/components/ui/card-error-boundary'
+import { useApiKeys } from '@/lib/queries'
+import type { Account } from '@/lib/accounts-store'
 
 interface Props {
-  account: Account;
+  account: Account
 }
 
 export function ApiKeysCard({ account }: Props) {
-  const { data: apiKeys, isLoading, error, refetch } = useApiKeys(account);
+  const { data: apiKeys, isLoading, error, refetch } = useApiKeys(account)
 
   if (isLoading) {
-    return <LoadingCard title="API Keys" />;
+    return <LoadingCard title="API Keys" />
   }
 
   if (error) {
@@ -23,33 +26,35 @@ export function ApiKeysCard({ account }: Props) {
         error={error}
         onRetry={() => refetch()}
       />
-    );
+    )
   }
 
-  const keys = apiKeys ?? [];
+  const keys = apiKeys ?? []
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base flex items-center gap-2">
+        <CardTitle className="flex items-center gap-2 text-base">
           <Key className="size-4" />
           API Keys ({keys.length})
         </CardTitle>
       </CardHeader>
       <CardContent>
         {keys.length === 0 ? (
-          <p className="text-muted-foreground text-center py-4">暂无 API Key</p>
+          <p className="text-muted-foreground py-4 text-center">暂无 API Key</p>
         ) : (
-          <ScrollArea className="max-h-64">
+          <ScrollArea className="h-64">
             <div className="space-y-2">
               {keys.map((key) => (
                 <div
                   key={key.id}
-                  className="flex items-center justify-between p-2 border rounded text-xs"
+                  className="flex items-center justify-between rounded border p-2 text-xs"
                 >
                   <div>
-                    <div className="font-medium">{key.name || "(未命名)"}</div>
-                    <code className="text-muted-foreground">{key.maskedApiKey}</code>
+                    <div className="font-medium">{key.name || '(未命名)'}</div>
+                    <code className="text-muted-foreground">
+                      {key.maskedApiKey}
+                    </code>
                   </div>
                   <div className="text-right">
                     <div>{(key.totalRequests ?? 0).toLocaleString()} 请求</div>
@@ -64,5 +69,5 @@ export function ApiKeysCard({ account }: Props) {
         )}
       </CardContent>
     </Card>
-  );
+  )
 }

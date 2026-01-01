@@ -189,7 +189,7 @@ export function SettingsPanel() {
       <div className="mb-8">
         <h1 className="text-2xl font-bold">设置</h1>
         <p className="text-muted-foreground">
-          管理您的 88Code 账号，添加或删除账号以便统一管理 · v0.1.0
+          管理您的 88Code 账号，添加或删除账号以便统一管理 · v{import.meta.env.APP_VERSION}
         </p>
       </div>
 

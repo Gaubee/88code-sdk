@@ -7,6 +7,7 @@ import { ServiceProvider } from "@/lib/service-context";
 import appCss from "../styles.css?url";
 
 export const Route = createRootRoute({
+  ssr: false,
   head: () => ({
     meta: [
       {
@@ -23,7 +24,7 @@ export const Route = createRootRoute({
     links: [
       {
         rel: "icon",
-        href: "logo.webp",
+        href: `${import.meta.env.BASE_URL}logo.webp`,
         type: "image/webp",
       },
       {
@@ -41,32 +42,6 @@ function RootDocument({ children }: { children: React.ReactNode }) {
   return (
     <html lang="zh-CN">
       <head>
-        <script
-          // GitHub Pages: https://{user}.github.io/88code-sdk/
-          // Custom Domain: https://example.com/
-          dangerouslySetInnerHTML={{
-            __html: `
-(function () {
-  try {
-    var repo = "88code-sdk";
-    var pathname = window.location.pathname || "/";
-    var isProjectPages =
-      pathname === "/" + repo ||
-      pathname.startsWith("/" + repo + "/");
-
-    var base = isProjectPages ? "/" + repo + "/" : "/";
-    window.__APP_BASE__ = base;
-
-    var baseEl = document.createElement("base");
-    baseEl.href = base;
-    document.head.prepend(baseEl);
-  } catch (_) {
-    // ignore
-  }
-})();
-            `.trim(),
-          }}
-        />
         <HeadContent />
       </head>
       <body>

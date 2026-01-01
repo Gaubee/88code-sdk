@@ -1,8 +1,10 @@
 import { useState } from "react";
-import { Plus, Trash2, Eye, EyeOff, Edit2, Check, X, Server, Timer } from "lucide-react";
+import { Plus, Trash2, Eye, EyeOff, Edit2, Check, X, Server, Timer, Activity, Terminal, Copy, Download, Upload, FileJson } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { useAccounts, useAutoRefresh } from "@/lib/use-sdk";
-import { REFRESH_INTERVALS } from "@/lib/settings-store";
+import type { Account } from "@/lib/accounts-store";
+import { useRelayPulseSettings } from "@/lib/service-context";
+import { REFRESH_INTERVALS, RELAYPULSE_DEFAULT_URL } from "@/lib/settings-store";
 import { DEFAULT_API_HOSTS, DEFAULT_API_HOST } from "@/lib/accounts-store";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,12 +35,30 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupTextarea,
+} from "@/components/ui/input-group";
 
 const CUSTOM_HOST_VALUE = "__custom__";
 
 export function SettingsPanel() {
   const { accounts, addAccount, removeAccount, updateAccount } = useAccounts();
   const { enabled: autoRefreshEnabled, interval: autoRefreshInterval, toggle: toggleAutoRefresh, setInterval: setRefreshInterval } = useAutoRefresh();
+  const { enabled: relayPulseEnabled, baseUrl: relayPulseBaseUrl, setEnabled: setRelayPulseEnabled, setBaseUrl: setRelayPulseBaseUrl } = useRelayPulseSettings();
+  const [copied, setCopied] = useState(false);
+  const [importExportDialogOpen, setImportExportDialogOpen] = useState(false);
+  const [importExportText, setImportExportText] = useState("");
+  const [importExportCopied, setImportExportCopied] = useState(false);
+
+  const proxyCommand = "npx @gaubee/88code-sdk plugin RelayPulse";
+  const copyCommand = async () => {
+    await navigator.clipboard.writeText(proxyCommand);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
   const [newName, setNewName] = useState("");
   const [newToken, setNewToken] = useState("");
   const [newApiHost, setNewApiHost] = useState<string>(DEFAULT_API_HOST);
@@ -129,6 +149,41 @@ export function SettingsPanel() {
     return token.slice(0, 6) + "..." + token.slice(-6);
   };
 
+  const openImportExportDialog = () => {
+    const exportData = accounts.map(({ name, token, apiHost }) => ({
+      name,
+      token,
+      apiHost,
+    }));
+    setImportExportText(JSON.stringify(exportData, null, 2));
+    setImportExportCopied(false);
+    setImportExportDialogOpen(true);
+  };
+
+  const copyImportExportText = async () => {
+    await navigator.clipboard.writeText(importExportText);
+    setImportExportCopied(true);
+    setTimeout(() => setImportExportCopied(false), 2000);
+  };
+
+  const handleImport = () => {
+    try {
+      const data = JSON.parse(importExportText) as Array<{ name: string; token: string; apiHost?: string }>;
+      if (!Array.isArray(data)) throw new Error("格式错误");
+      let imported = 0;
+      for (const item of data) {
+        if (item.name && item.token) {
+          addAccount(item.name, item.token, item.apiHost || DEFAULT_API_HOST);
+          imported++;
+        }
+      }
+      alert(`成功导入 ${imported} 个账号`);
+      setImportExportDialogOpen(false);
+    } catch (err) {
+      alert("导入失败：" + (err instanceof Error ? err.message : "JSON 格式错误"));
+    }
+  };
+
   return (
     <div className="p-6 max-w-4xl mx-auto">
       <div className="mb-8">
@@ -197,13 +252,97 @@ export function SettingsPanel() {
         </CardContent>
       </Card>
 
-      {/* 添加新账号 */}
+      {/* RelayPulse 服务状态 */}
       <Card className="mb-6">
         <CardHeader>
-          <CardTitle className="text-base">添加新账号</CardTitle>
+          <CardTitle className="text-base flex items-center gap-2">
+            <Activity className="size-4" />
+            RelayPulse 服务状态
+          </CardTitle>
           <CardDescription>
-            输入账号名称和 Auth Token 添加新的 88Code 账号
+            基于 RelayPulse 的公开探测数据，查看 88Code API 服务实时可用性
           </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {/* 启用开关 */}
+            <div className="flex items-center justify-between">
+              <div>
+                <Label htmlFor="relaypulse-enabled" className="text-sm font-medium">
+                  启用服务状态监控
+                </Label>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  在仪表盘显示 API 服务可用性状态
+                </p>
+              </div>
+              <Switch
+                id="relaypulse-enabled"
+                checked={relayPulseEnabled}
+                onCheckedChange={setRelayPulseEnabled}
+              />
+            </div>
+
+            {/* 本地代理说明 */}
+            <div className="rounded-lg border bg-muted/50 p-4">
+              <div className="flex items-start gap-3">
+                <Terminal className="size-5 text-muted-foreground mt-0.5 shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium mb-1">本地代理模式</p>
+                  <p className="text-xs text-muted-foreground mb-3">
+                    由于浏览器跨域限制，需要启动本地代理服务来获取 RelayPulse 数据。
+                    在终端运行以下命令：
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <code className="flex-1 bg-background rounded px-3 py-2 text-xs font-mono border">
+                      {proxyCommand}
+                    </code>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={copyCommand}
+                      className="shrink-0"
+                    >
+                      {copied ? <Check className="size-3" /> : <Copy className="size-3" />}
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    代理启动后会显示本地地址，将地址填入下方配置
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* 自定义地址 */}
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">
+                API 地址
+              </Label>
+              <Input
+                placeholder={RELAYPULSE_DEFAULT_URL}
+                value={relayPulseBaseUrl}
+                onChange={(e) => setRelayPulseBaseUrl(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">
+                留空使用默认地址 ({RELAYPULSE_DEFAULT_URL})，或填入本地代理地址 (如 http://localhost:3000)
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* 添加新账号 */}
+      <Card className="mb-6">
+        <CardHeader className="flex flex-row items-start justify-between">
+          <div>
+            <CardTitle className="text-base">添加新账号</CardTitle>
+            <CardDescription>
+              输入账号名称和 Auth Token 添加新的 88Code 账号
+            </CardDescription>
+          </div>
+          <Button variant="outline" size="sm" onClick={openImportExportDialog}>
+            <FileJson className="size-4 mr-1" />
+            导入/导出
+          </Button>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 sm:grid-cols-[1fr_2fr_1fr_auto]">
@@ -441,6 +580,45 @@ export function SettingsPanel() {
           )}
         </CardContent>
       </Card>
+
+      {/* 导入/导出 Dialog */}
+      <AlertDialog open={importExportDialogOpen} onOpenChange={setImportExportDialogOpen}>
+        <AlertDialogContent className="max-w-2xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <FileJson className="size-5" />
+              导入/导出账号
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              复制下方 JSON 进行备份，或粘贴 JSON 数据导入账号
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="py-4">
+            <InputGroup className="h-auto">
+              <InputGroupTextarea
+                value={importExportText}
+                onChange={(e) => setImportExportText(e.target.value)}
+                rows={12}
+                className="font-mono text-xs"
+                placeholder='[{"name": "账号名", "token": "authToken", "apiHost": "https://88code.ai"}]'
+              />
+              <InputGroupAddon align="block-end" className="border-t justify-end">
+                <InputGroupButton onClick={copyImportExportText}>
+                  {importExportCopied ? <Check className="size-3" /> : <Copy className="size-3" />}
+                  {importExportCopied ? "已复制" : "复制"}
+                </InputGroupButton>
+              </InputGroupAddon>
+            </InputGroup>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel>取消</AlertDialogCancel>
+            <Button onClick={handleImport}>
+              <Upload className="size-4 mr-1" />
+              导入
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

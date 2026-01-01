@@ -61,7 +61,7 @@ export function SubscriptionsCard({ account }: Props) {
           <div className="space-y-6">
             {/* 活跃中的订阅 */}
             {activeSubscriptions.length > 0 && (
-              <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {activeSubscriptions.map((sub) => (
                   <SubscriptionPlanCard
                     key={sub.id}

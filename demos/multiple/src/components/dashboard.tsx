@@ -7,6 +7,14 @@ import { SubscriptionPlanCard } from "@/components/account/subscription-plan-car
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import type { Account } from "@/lib/accounts-store";
@@ -14,6 +22,7 @@ import { queryKeys, useCodexFreeQuota, useLoginInfo, useResetCredits, useSubscri
 import { useRelayPulseStatus } from "@/lib/relaypulse-queries";
 import { computeRelayPulseAvailabilityPercent, formatRelayPulseTimestampSeconds, getRelayPulseStatusLabel } from "@/lib/relaypulse-utils";
 import { useAccounts, useAutoRefresh } from "@/lib/use-sdk";
+import { useRelayPulseSettings } from "@/lib/service-context";
 
 type DashboardTotals = {
   totalCredits: number;
@@ -33,6 +42,14 @@ function isActiveSubscription(subscription: Subscription): boolean {
 
 function useDashboardTotals(accounts: Account[]): DashboardTotals {
   const queryClient = useQueryClient();
+
+  // 缓存上一次的结果，避免 useSyncExternalStore 因新对象引用触发无限循环
+  const cachedRef = React.useRef<DashboardTotals>({
+    totalCredits: 0,
+    remainingCredits: 0,
+    usedCredits: 0,
+    activeSubscriptions: 0,
+  });
 
   const getSnapshot = React.useCallback((): DashboardTotals => {
     const totals: DashboardTotals = {
@@ -64,6 +81,19 @@ function useDashboardTotals(accounts: Account[]): DashboardTotals {
     }
 
     totals.usedCredits = totals.totalCredits - totals.remainingCredits;
+
+    // 只有值真正变化时才返回新对象
+    const cached = cachedRef.current;
+    if (
+      cached.totalCredits === totals.totalCredits &&
+      cached.remainingCredits === totals.remainingCredits &&
+      cached.usedCredits === totals.usedCredits &&
+      cached.activeSubscriptions === totals.activeSubscriptions
+    ) {
+      return cached;
+    }
+
+    cachedRef.current = totals;
     return totals;
   }, [accounts, queryClient]);
 
@@ -73,7 +103,7 @@ function useDashboardTotals(accounts: Account[]): DashboardTotals {
       [queryClient]
     ),
     getSnapshot,
-    () => ({ totalCredits: 0, remainingCredits: 0, usedCredits: 0, activeSubscriptions: 0 })
+    () => cachedRef.current
   );
 }
 
@@ -163,7 +193,7 @@ function AccountSummaryCard({ account }: { account: Account }) {
             暂无活跃订阅
           </p>
         ) : (
-          <div className="space-y-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             {hasCodexFree && codexFreeQuery.data && (
               <CodexFreeSummary quota={codexFreeQuery.data} />
             )}
@@ -183,18 +213,107 @@ function AccountSummaryCard({ account }: { account: Account }) {
   );
 }
 
+function StatusTrend({ entry }: { entry: RelayPulseStatusEntry }) {
+  const timeline = entry.timeline ?? [];
+  if (timeline.length === 0) return null;
+
+  return (
+    <div className="flex items-center gap-0.5">
+      {timeline.map((point) => {
+        const status = getRelayPulseStatusLabel(point.status);
+        return (
+          <div
+            key={point.timestamp}
+            title={`${point.time} · ${status.text} · ${point.latency}ms`}
+            className={"h-3 w-1.5 rounded-none " + status.className}
+          />
+        );
+      })}
+    </div>
+  );
+}
+
+function RelayPulseServiceSection({ 
+  title, 
+  entries, 
+  isLoading, 
+  error 
+}: { 
+  title: string;
+  entries: RelayPulseStatusEntry[];
+  isLoading: boolean;
+  error: Error | null;
+}) {
+  const items = React.useMemo(() => {
+    return entries.slice().sort((a, b) => a.channel.localeCompare(b.channel));
+  }, [entries]);
+
+  return (
+    <div className="space-y-2">
+      <h4 className="text-sm font-medium text-muted-foreground">{title}</h4>
+      {error ? (
+        <p className="text-sm text-destructive">{error.message}</p>
+      ) : isLoading && items.length === 0 ? (
+        <p className="text-sm text-muted-foreground">加载中...</p>
+      ) : items.length === 0 ? (
+        <p className="text-sm text-muted-foreground">暂无数据</p>
+      ) : (
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Channel</TableHead>
+              <TableHead>当前状态</TableHead>
+              <TableHead>可用率</TableHead>
+              <TableHead>最后监测</TableHead>
+              <TableHead>质量趋势</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {items.map((entry: RelayPulseStatusEntry) => {
+              const status = getRelayPulseStatusLabel(entry.current_status.status);
+              const availability = computeRelayPulseAvailabilityPercent(entry);
+              return (
+                <TableRow key={`${entry.provider_slug}:${entry.service}:${entry.channel}`}>
+                  <TableCell className="font-medium">{entry.channel}</TableCell>
+                  <TableCell>
+                    <span className={"px-2 py-0.5 text-xs rounded-none " + status.className}>
+                      {status.text}
+                    </span>
+                    <span className="text-xs text-muted-foreground ml-2">
+                      {entry.current_status.latency}ms
+                    </span>
+                  </TableCell>
+                  <TableCell className="text-xs">{availability.toFixed(2)}%</TableCell>
+                  <TableCell className="text-xs text-muted-foreground">
+                    {formatRelayPulseTimestampSeconds(entry.current_status.timestamp)}
+                  </TableCell>
+                  <TableCell>
+                    <StatusTrend entry={entry} />
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      )}
+    </div>
+  );
+}
+
 function RelayPulse88codeCard() {
-  const { data, isLoading, error } = useRelayPulseStatus({
+  const ccQuery = useRelayPulseStatus({
     period: "90m",
     board: "hot",
     provider: "88code",
     service: "cc",
   });
 
-  const items = React.useMemo(() => {
-    const list = (data ?? []).slice();
-    return list.sort((a, b) => a.channel.localeCompare(b.channel));
-  }, [data]);
+  const cxQuery = useRelayPulseStatus({
+    period: "90m",
+    board: "hot",
+    provider: "88code",
+    service: "cx",
+  });
 
   return (
     <Card>
@@ -203,7 +322,7 @@ function RelayPulse88codeCard() {
           <div>
             <CardTitle className="text-base flex items-center gap-2">
               <Activity className="size-4" />
-              88code · Claude Code (CC) 服务状态
+              88code 服务状态
             </CardTitle>
             <CardDescription>来源：RelayPulse · 近90分钟</CardDescription>
           </div>
@@ -214,40 +333,19 @@ function RelayPulse88codeCard() {
           </Link>
         </div>
       </CardHeader>
-      <CardContent>
-        {error ? (
-          <p className="text-sm text-destructive">{error.message}</p>
-        ) : isLoading && !data ? (
-          <p className="text-sm text-muted-foreground">加载中...</p>
-        ) : items.length === 0 ? (
-          <p className="text-sm text-muted-foreground">暂无数据</p>
-        ) : (
-          <div className="space-y-2">
-            {items.map((entry: RelayPulseStatusEntry) => {
-              const status = getRelayPulseStatusLabel(entry.current_status.status);
-              const availability = computeRelayPulseAvailabilityPercent(entry);
-              return (
-                <div
-                  key={`${entry.provider_slug}:${entry.service}:${entry.channel}`}
-                  className="flex items-center justify-between gap-3 border rounded-none p-2 text-xs"
-                >
-                  <div className="min-w-0">
-                    <div className="font-medium truncate">{entry.channel}</div>
-                    <div className="text-muted-foreground truncate">
-                      {formatRelayPulseTimestampSeconds(entry.current_status.timestamp)} · {entry.current_status.latency}ms
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    <span className={"px-2 py-0.5 rounded-none " + status.className}>
-                      {status.text}
-                    </span>
-                    <span className="text-muted-foreground">{availability.toFixed(2)}%</span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
+      <CardContent className="space-y-4">
+        <RelayPulseServiceSection
+          title="Claude Code (CC)"
+          entries={ccQuery.data ?? []}
+          isLoading={ccQuery.isLoading}
+          error={ccQuery.error}
+        />
+        <RelayPulseServiceSection
+          title="Claude Code Max (CX)"
+          entries={cxQuery.data ?? []}
+          isLoading={cxQuery.isLoading}
+          error={cxQuery.error}
+        />
       </CardContent>
     </Card>
   );
@@ -257,6 +355,7 @@ export function Dashboard() {
   const { accounts } = useAccounts();
   const queryClient = useQueryClient();
   const { enabled: autoRefreshEnabled, toggle: toggleAutoRefresh } = useAutoRefresh();
+  const { enabled: relayPulseEnabled } = useRelayPulseSettings();
   const totals = useDashboardTotals(accounts);
 
   const refreshAll = async () => {
@@ -341,9 +440,11 @@ export function Dashboard() {
         </Card>
       </div>
 
-      <div className="mb-8">
-        <RelayPulse88codeCard />
-      </div>
+      {relayPulseEnabled && (
+        <div className="mb-8">
+          <RelayPulse88codeCard />
+        </div>
+      )}
 
       {/* Accounts */}
       <div className="space-y-4">

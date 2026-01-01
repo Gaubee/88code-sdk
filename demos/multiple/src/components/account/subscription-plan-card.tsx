@@ -33,6 +33,7 @@ function clampNumber(value: number, min: number, max: number): number {
 function getRemainingPercent(currentCredits: number, creditLimit: number): number {
   if (!Number.isFinite(currentCredits) || !Number.isFinite(creditLimit)) return 0;
   if (creditLimit <= 0) return 0;
+  if (currentCredits <= 0) return 0;
   const remaining = clampNumber(currentCredits, 0, creditLimit);
   return (remaining / creditLimit) * 100;
 }
@@ -94,7 +95,13 @@ export function SubscriptionPlanCard({
             {showResetMeta && (
               <>
                 {" "}
-                | 重置次数: {subscription.resetTimes ?? 0}
+                | 重置次数: <span className={
+                  (subscription.resetTimes ?? 0) >= 2
+                    ? "text-green-600 dark:text-green-400 font-medium"
+                    : (subscription.resetTimes ?? 0) === 1
+                    ? "text-blue-600 dark:text-blue-400 font-medium"
+                    : ""
+                }>{subscription.resetTimes ?? 0}</span>
                 {subscription.lastCreditReset && (
                   <> | 上次重置: {new Date(subscription.lastCreditReset).toLocaleString()}</>
                 )}

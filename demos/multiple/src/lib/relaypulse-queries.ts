@@ -6,7 +6,7 @@ import type {
   RelayPulsePeriod,
   RelayPulseStatusEntry,
 } from '@gaubee/88code-sdk'
-import { usePollingSubscription } from './use-polling-subscription'
+import { useRefresh, useRegisterRefetch } from './refresh-context'
 import { useRelayPulseSettings } from './service-context'
 
 export const relayPulseQueryKeys = {
@@ -62,6 +62,7 @@ function normalizeStatusParams(
 
 export function useRelayPulseStatus(options: UseRelayPulseStatusOptions = {}) {
   const { enabled, baseUrl: configuredBaseUrl } = useRelayPulseSettings()
+  const { interval } = useRefresh()
   const effectiveBaseUrl = configuredBaseUrl || RELAYPULSE_BASE_URL
 
   const params = React.useMemo(
@@ -82,19 +83,22 @@ export function useRelayPulseStatus(options: UseRelayPulseStatusOptions = {}) {
     [params, effectiveBaseUrl],
   )
 
-  const queryFn = React.useCallback(async (): Promise<
-    RelayPulseStatusEntry[]
-  > => {
-    const result = await getRelayPulseStatus(params, {
-      baseUrl: effectiveBaseUrl,
-    })
-    if (!result.success) {
-      throw new Error(result.message || '获取 RelayPulse 状态失败')
-    }
-    return result.data
-  }, [params, effectiveBaseUrl])
+  const query = useQuery({
+    queryKey,
+    queryFn: async (): Promise<RelayPulseStatusEntry[]> => {
+      const result = await getRelayPulseStatus(params, {
+        baseUrl: effectiveBaseUrl,
+      })
+      if (!result.success) {
+        throw new Error(result.message || '获取 RelayPulse 状态失败')
+      }
+      return result.data
+    },
+    enabled,
+    refetchInterval: enabled ? interval : false,
+  })
 
-  usePollingSubscription(queryKey, queryFn, enabled)
+  useRegisterRefetch(JSON.stringify(queryKey), query.refetch, enabled)
 
-  return useQuery({ queryKey, queryFn, enabled })
+  return query
 }

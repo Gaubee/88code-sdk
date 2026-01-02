@@ -1,13 +1,13 @@
 /**
  * TanStack Query hooks for 88Code SDK
- * 支持自动刷新
+ * 使用 refetchInterval 自动刷新 + RefreshContext 订阅注册
  */
 
 import * as React from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import type { Account } from './accounts-store'
 import { useService } from './service-context'
-import { usePollingSubscription } from './use-polling-subscription'
+import { useRefresh, useRegisterRefetch } from './refresh-context'
 
 // ===== Query Keys Factory =====
 
@@ -31,14 +31,14 @@ export const queryKeys = {
     [...queryKeys.account(accountId), 'modelUsage'] as const,
 }
 
-// ===== Helper =====
-
 // ===== Query Hooks =====
 
 /** 登录信息 */
 export function useLoginInfo(account: Account | null) {
   const { code88 } = useService()
+  const { interval } = useRefresh()
   const enabled = !!account
+
   const queryKey = React.useMemo(
     () => queryKeys.loginInfo(account?.id ?? ''),
     [account?.id],
@@ -51,15 +51,24 @@ export function useLoginInfo(account: Account | null) {
     return result.data
   }, [account?.id, account?.token, account?.apiHost, code88])
 
-  usePollingSubscription(queryKey, queryFn, enabled)
+  const query = useQuery({
+    queryKey,
+    queryFn,
+    enabled,
+    refetchInterval: enabled ? interval : false,
+  })
 
-  return useQuery({ queryKey, queryFn, enabled })
+  useRegisterRefetch(JSON.stringify(queryKey), query.refetch, enabled)
+
+  return query
 }
 
 /** 订阅列表 */
 export function useSubscriptions(account: Account | null) {
   const { code88 } = useService()
+  const { interval } = useRefresh()
   const enabled = !!account
+
   const queryKey = React.useMemo(
     () => queryKeys.subscriptions(account?.id ?? ''),
     [account?.id],
@@ -72,15 +81,24 @@ export function useSubscriptions(account: Account | null) {
     return result.data
   }, [account?.id, account?.token, account?.apiHost, code88])
 
-  usePollingSubscription(queryKey, queryFn, enabled)
+  const query = useQuery({
+    queryKey,
+    queryFn,
+    enabled,
+    refetchInterval: enabled ? interval : false,
+  })
 
-  return useQuery({ queryKey, queryFn, enabled })
+  useRegisterRefetch(JSON.stringify(queryKey), query.refetch, enabled)
+
+  return query
 }
 
 /** Codex Free 额度 */
 export function useCodexFreeQuota(account: Account | null) {
   const { code88 } = useService()
+  const { interval } = useRefresh()
   const enabled = !!account
+
   const queryKey = React.useMemo(
     () => queryKeys.codexFreeQuota(account?.id ?? ''),
     [account?.id],
@@ -94,15 +112,24 @@ export function useCodexFreeQuota(account: Account | null) {
     return result.data
   }, [account?.id, account?.token, account?.apiHost, code88])
 
-  usePollingSubscription(queryKey, queryFn, enabled)
+  const query = useQuery({
+    queryKey,
+    queryFn,
+    enabled,
+    refetchInterval: enabled ? interval : false,
+  })
 
-  return useQuery({ queryKey, queryFn, enabled })
+  useRegisterRefetch(JSON.stringify(queryKey), query.refetch, enabled)
+
+  return query
 }
 
 /** 仪表盘数据 */
 export function useDashboard(account: Account | null) {
   const { code88 } = useService()
+  const { interval } = useRefresh()
   const enabled = !!account
+
   const queryKey = React.useMemo(
     () => queryKeys.dashboard(account?.id ?? ''),
     [account?.id],
@@ -115,15 +142,24 @@ export function useDashboard(account: Account | null) {
     return result.data
   }, [account?.id, account?.token, account?.apiHost, code88])
 
-  usePollingSubscription(queryKey, queryFn, enabled)
+  const query = useQuery({
+    queryKey,
+    queryFn,
+    enabled,
+    refetchInterval: enabled ? interval : false,
+  })
 
-  return useQuery({ queryKey, queryFn, enabled })
+  useRegisterRefetch(JSON.stringify(queryKey), query.refetch, enabled)
+
+  return query
 }
 
 /** API Keys 列表 */
 export function useApiKeys(account: Account | null) {
   const { code88 } = useService()
+  const { interval } = useRefresh()
   const enabled = !!account
+
   const queryKey = React.useMemo(
     () => queryKeys.apiKeys(account?.id ?? ''),
     [account?.id],
@@ -136,15 +172,24 @@ export function useApiKeys(account: Account | null) {
     return result.data.list
   }, [account?.id, account?.token, account?.apiHost, code88])
 
-  usePollingSubscription(queryKey, queryFn, enabled)
+  const query = useQuery({
+    queryKey,
+    queryFn,
+    enabled,
+    refetchInterval: enabled ? interval : false,
+  })
 
-  return useQuery({ queryKey, queryFn, enabled })
+  useRegisterRefetch(JSON.stringify(queryKey), query.refetch, enabled)
+
+  return query
 }
 
 /** Credit 历史记录 */
 export function useCreditHistory(account: Account | null) {
   const { code88 } = useService()
+  const { interval } = useRefresh()
   const enabled = !!account
+
   const queryKey = React.useMemo(
     () => queryKeys.creditHistory(account?.id ?? ''),
     [account?.id],
@@ -164,15 +209,24 @@ export function useCreditHistory(account: Account | null) {
     return result.data.list
   }, [account?.id, account?.token, account?.apiHost, code88])
 
-  usePollingSubscription(queryKey, queryFn, enabled)
+  const query = useQuery({
+    queryKey,
+    queryFn,
+    enabled,
+    refetchInterval: enabled ? interval : false,
+  })
 
-  return useQuery({ queryKey, queryFn, enabled })
+  useRegisterRefetch(JSON.stringify(queryKey), query.refetch, enabled)
+
+  return query
 }
 
 /** 模型用量统计 */
 export function useModelUsage(account: Account | null) {
   const { code88 } = useService()
+  const { interval } = useRefresh()
   const enabled = !!account
+
   const queryKey = React.useMemo(
     () => queryKeys.modelUsage(account?.id ?? ''),
     [account?.id],
@@ -191,9 +245,16 @@ export function useModelUsage(account: Account | null) {
     return result.data
   }, [account?.id, account?.token, account?.apiHost, code88])
 
-  usePollingSubscription(queryKey, queryFn, enabled)
+  const query = useQuery({
+    queryKey,
+    queryFn,
+    enabled,
+    refetchInterval: enabled ? interval : false,
+  })
 
-  return useQuery({ queryKey, queryFn, enabled })
+  useRegisterRefetch(JSON.stringify(queryKey), query.refetch, enabled)
+
+  return query
 }
 
 // ===== Mutation Hooks =====

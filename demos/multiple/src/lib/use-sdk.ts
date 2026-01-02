@@ -13,11 +13,7 @@ export { useService } from './service-context'
 import type { Account } from './accounts-store'
 import { DEFAULT_API_HOST } from './accounts-store'
 
-export {
-  AutoRefreshIntervalProvider,
-  useAutoRefreshInterval,
-} from './auto-refresh-context'
-
+export { useRefresh } from './refresh-context'
 export { useSettings } from './settings-store'
 
 /**

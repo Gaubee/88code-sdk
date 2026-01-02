@@ -1,11 +1,10 @@
 /**
  * 服务层 Context
- * 统一管理设置、账号和数据请求
+ * 统一管理设置、账号和服务
  */
 
 import * as React from 'react'
 import { useSettings, type AppSettings } from './settings-store'
-import { queryClient } from './query-client'
 import {
   getAccounts,
   addAccount as addAccountToStorage,
@@ -15,16 +14,14 @@ import {
   type Account,
   DEFAULT_API_HOST,
 } from './accounts-store'
-import { PollingManager } from './services/polling-manager'
 import { Code88Service } from './services/code88-service'
 import { AutoResetService } from './services/auto-reset-service'
-import { AutoRefreshIntervalProvider } from './auto-refresh-context'
+import { RefreshProvider } from './refresh-context'
 
 // ===== Context 类型 =====
 
 interface ServiceContextValue {
-  // Query / Services
-  pollingManager: PollingManager
+  // Services
   code88: Code88Service
   autoReset: AutoResetService
 
@@ -69,15 +66,6 @@ export function ServiceProvider({ children }: ServiceProviderProps) {
 
   const code88 = React.useMemo(() => new Code88Service(), [])
   const autoReset = React.useMemo(() => new AutoResetService(code88), [code88])
-  const pollingManager = React.useMemo(
-    () => new PollingManager(queryClient, settings.autoRefreshInterval),
-    [],
-  )
-
-  // 同步刷新间隔到 PollingManager（enabled 由页面级 Context 控制）
-  React.useEffect(() => {
-    pollingManager.setIntervalMs(settings.autoRefreshInterval)
-  }, [pollingManager, settings.autoRefreshInterval])
 
   const [accounts, setAccounts] = React.useState<Account[]>([])
   const [currentAccount, setCurrentAccount] = React.useState<Account | null>(
@@ -112,7 +100,6 @@ export function ServiceProvider({ children }: ServiceProviderProps) {
   const removeAccount = React.useCallback((id: string) => {
     removeAccountFromStorage(id)
     setAccounts(getAccounts())
-    // 如果删除的是当前账号，清空选择
     setCurrentAccount((prev) => (prev?.id === id ? null : prev))
   }, [])
 
@@ -124,7 +111,6 @@ export function ServiceProvider({ children }: ServiceProviderProps) {
     ) => {
       updateAccountInStorage(id, updates)
       setAccounts(getAccounts())
-      // 更新当前账号（如果是同一个）
       setCurrentAccount((prev) => {
         if (prev?.id === id) {
           return getAccountById(id) ?? null
@@ -137,7 +123,6 @@ export function ServiceProvider({ children }: ServiceProviderProps) {
 
   const value = React.useMemo<ServiceContextValue>(
     () => ({
-      pollingManager,
       code88,
       autoReset,
       settings,
@@ -152,7 +137,6 @@ export function ServiceProvider({ children }: ServiceProviderProps) {
       refreshAccounts,
     }),
     [
-      pollingManager,
       code88,
       autoReset,
       settings,
@@ -169,7 +153,7 @@ export function ServiceProvider({ children }: ServiceProviderProps) {
 
   return (
     <ServiceContext.Provider value={value}>
-      <AutoRefreshIntervalProvider>{children}</AutoRefreshIntervalProvider>
+      <RefreshProvider>{children}</RefreshProvider>
     </ServiceContext.Provider>
   )
 }

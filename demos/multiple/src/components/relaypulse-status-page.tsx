@@ -6,6 +6,7 @@ import type {
   RelayPulseStatusEntry,
 } from '@gaubee/88code-sdk'
 import { useRelayPulseStatus } from '@/lib/relaypulse-queries'
+import { useRefresh } from '@/lib/use-sdk'
 import { Label } from '@/components/ui/label'
 import {
   computeRelayPulseAvailabilityPercent,
@@ -105,6 +106,7 @@ function StatusTrend({ entry }: { entry: RelayPulseStatusEntry }) {
 }
 
 export function RelayPulseStatusPage() {
+  const { refreshAll } = useRefresh()
   const [period, setPeriod] = React.useState<RelayPulsePeriod>('90m')
   const [board, setBoard] = React.useState<RelayPulseBoard>('hot')
   const [category, setCategory] =
@@ -115,7 +117,7 @@ export function RelayPulseStatusPage() {
   const [sort, setSort] = React.useState<SortOption>('channel_desc')
   const [search, setSearch] = React.useState<string>('')
 
-  const { data, isLoading, error, refetch, isFetching } = useRelayPulseStatus({
+  const { data, isLoading, error, isFetching } = useRelayPulseStatus({
     period,
     board,
   })
@@ -195,7 +197,7 @@ export function RelayPulseStatusPage() {
         </div>
         <Button
           variant="outline"
-          onClick={() => refetch()}
+          onClick={() => refreshAll()}
           disabled={isFetching}
         >
           <RefreshCw

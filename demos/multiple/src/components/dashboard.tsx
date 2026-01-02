@@ -49,9 +49,8 @@ import {
   formatRelayPulseTimestampSeconds,
   getRelayPulseStatusLabel,
 } from '@/lib/relaypulse-utils'
-import { useAccounts } from '@/lib/use-sdk'
+import { useAccounts, useRefresh } from '@/lib/use-sdk'
 import { useRelayPulseSettings } from '@/lib/service-context'
-import { relayPulseQueryKeys } from '@/lib/relaypulse-queries'
 
 type DashboardTotals = {
   totalCredits: number
@@ -400,16 +399,9 @@ function RelayPulse88codeCard() {
 
 export function Dashboard() {
   const { accounts } = useAccounts()
-  const queryClient = useQueryClient()
+  const { refreshAll } = useRefresh()
   const { enabled: relayPulseEnabled } = useRelayPulseSettings()
   const totals = useDashboardTotals(accounts)
-
-  const refreshAll = async () => {
-    await Promise.all([
-      queryClient.refetchQueries({ queryKey: queryKeys.all }),
-      queryClient.refetchQueries({ queryKey: relayPulseQueryKeys.all }),
-    ])
-  }
 
   if (accounts.length === 0) {
     return (

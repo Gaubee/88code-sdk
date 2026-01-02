@@ -1,7 +1,7 @@
 import { RefreshCw, User, AlertCircle, Loader2 } from 'lucide-react'
-import { useQueryClient } from '@tanstack/react-query'
 import { getAccountById, type Account } from '@/lib/accounts-store'
-import { useLoginInfo, queryKeys } from '@/lib/queries'
+import { useLoginInfo } from '@/lib/queries'
+import { useRefresh } from '@/lib/use-sdk'
 import { Button } from '@/components/ui/button'
 import { CardErrorBoundary } from '@/components/ui/card-error-boundary'
 import {
@@ -19,13 +19,11 @@ interface AccountDetailProps {
 
 export function AccountDetail({ accountId }: AccountDetailProps) {
   const account = getAccountById(accountId) ?? null
-  const queryClient = useQueryClient()
-  const { data: loginInfo, isLoading, error } = useLoginInfo(account!)
+  const { refreshAll } = useRefresh()
+  const { data: loginInfo, isLoading, error } = useLoginInfo(account)
 
   const handleRefreshAll = () => {
-    if (account) {
-      queryClient.invalidateQueries({ queryKey: queryKeys.account(account.id) })
-    }
+    refreshAll()
   }
 
   if (!account) {

@@ -14,11 +14,8 @@ import type { Account } from './accounts-store'
 import { DEFAULT_API_HOST } from './accounts-store'
 
 export {
-  AutoRefreshEnabledProvider,
   AutoRefreshIntervalProvider,
-  useAutoRefreshEnabled,
   useAutoRefreshInterval,
-  useAutoRefresh,
 } from './auto-refresh-context'
 
 export { useSettings } from './settings-store'

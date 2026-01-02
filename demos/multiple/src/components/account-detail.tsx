@@ -1,12 +1,8 @@
-import { useState } from 'react'
 import { RefreshCw, User, AlertCircle, Loader2 } from 'lucide-react'
 import { useQueryClient } from '@tanstack/react-query'
 import { getAccountById, type Account } from '@/lib/accounts-store'
 import { useLoginInfo, queryKeys } from '@/lib/queries'
-import { AutoRefreshEnabledProvider } from '@/lib/auto-refresh-context'
 import { Button } from '@/components/ui/button'
-import { Switch } from '@/components/ui/switch'
-import { Label } from '@/components/ui/label'
 import { CardErrorBoundary } from '@/components/ui/card-error-boundary'
 import {
   DashboardOverviewCard,
@@ -23,7 +19,14 @@ interface AccountDetailProps {
 
 export function AccountDetail({ accountId }: AccountDetailProps) {
   const account = getAccountById(accountId) ?? null
-  const [autoRefreshEnabled, setAutoRefreshEnabled] = useState(true)
+  const queryClient = useQueryClient()
+  const { data: loginInfo, isLoading, error } = useLoginInfo(account!)
+
+  const handleRefreshAll = () => {
+    if (account) {
+      queryClient.invalidateQueries({ queryKey: queryKeys.account(account.id) })
+    }
+  }
 
   if (!account) {
     return (
@@ -32,35 +35,6 @@ export function AccountDetail({ accountId }: AccountDetailProps) {
         <p className="text-destructive">账号不存在</p>
       </div>
     )
-  }
-
-  return (
-    <AutoRefreshEnabledProvider enabled={autoRefreshEnabled}>
-      <AccountDetailContent
-        account={account}
-        autoRefreshEnabled={autoRefreshEnabled}
-        onAutoRefreshChange={setAutoRefreshEnabled}
-      />
-    </AutoRefreshEnabledProvider>
-  )
-}
-
-interface AccountDetailContentProps {
-  account: Account
-  autoRefreshEnabled: boolean
-  onAutoRefreshChange: (enabled: boolean) => void
-}
-
-function AccountDetailContent({
-  account,
-  autoRefreshEnabled,
-  onAutoRefreshChange,
-}: AccountDetailContentProps) {
-  const queryClient = useQueryClient()
-  const { data: loginInfo, isLoading, error } = useLoginInfo(account)
-
-  const handleRefreshAll = () => {
-    queryClient.invalidateQueries({ queryKey: queryKeys.account(account.id) })
   }
 
   if (isLoading) {
@@ -96,26 +70,10 @@ function AccountDetailContent({
             </p>
           )}
         </div>
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <Switch
-              id="auto-refresh-account"
-              size="sm"
-              checked={autoRefreshEnabled}
-              onCheckedChange={onAutoRefreshChange}
-            />
-            <Label
-              htmlFor="auto-refresh-account"
-              className="text-muted-foreground cursor-pointer text-sm"
-            >
-              自动刷新
-            </Label>
-          </div>
-          <Button variant="outline" onClick={handleRefreshAll}>
-            <RefreshCw className="mr-1 size-4" />
-            刷新
-          </Button>
-        </div>
+        <Button variant="outline" onClick={handleRefreshAll}>
+          <RefreshCw className="mr-1 size-4" />
+          刷新
+        </Button>
       </div>
 
       {/* Dashboard Overview */}

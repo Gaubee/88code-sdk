@@ -50,7 +50,6 @@ import {
   getRelayPulseStatusLabel,
 } from '@/lib/relaypulse-utils'
 import { useAccounts } from '@/lib/use-sdk'
-import { AutoRefreshEnabledProvider } from '@/lib/auto-refresh-context'
 import { useRelayPulseSettings } from '@/lib/service-context'
 import { relayPulseQueryKeys } from '@/lib/relaypulse-queries'
 
@@ -402,7 +401,6 @@ function RelayPulse88codeCard() {
 export function Dashboard() {
   const { accounts } = useAccounts()
   const queryClient = useQueryClient()
-  const [autoRefreshEnabled, setAutoRefreshEnabled] = React.useState(true)
   const { enabled: relayPulseEnabled } = useRelayPulseSettings()
   const totals = useDashboardTotals(accounts)
 
@@ -434,85 +432,67 @@ export function Dashboard() {
   }
 
   return (
-    <AutoRefreshEnabledProvider enabled={autoRefreshEnabled}>
-      <div className="mx-auto max-w-6xl p-6">
-        {/* Header */}
-        <div className="mb-6 flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold">综合面板</h1>
-            <p className="text-muted-foreground">
-              管理 {accounts.length} 个 88Code 账号
-            </p>
-          </div>
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <Switch
-                id="auto-refresh-dashboard"
-                size="sm"
-                checked={autoRefreshEnabled}
-                onCheckedChange={setAutoRefreshEnabled}
-              />
-              <Label
-                htmlFor="auto-refresh-dashboard"
-                className="text-muted-foreground cursor-pointer text-sm"
-              >
-                自动刷新
-              </Label>
-            </div>
-            <Button variant="outline" onClick={refreshAll}>
-              <RefreshCw className="mr-1 size-4" />
-              刷新全部
-            </Button>
-          </div>
+    <div className="mx-auto max-w-6xl p-6">
+      {/* Header */}
+      <div className="mb-6 flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold">综合面板</h1>
+          <p className="text-muted-foreground">
+            管理 {accounts.length} 个 88Code 账号
+          </p>
         </div>
-
-        {/* Totals */}
-        <div className="mb-8 grid gap-4 md:grid-cols-4">
-          <Card size="sm">
-            <CardContent className="pt-4">
-              <div className="text-2xl font-bold">{accounts.length}</div>
-              <p className="text-muted-foreground text-xs">账号总数</p>
-            </CardContent>
-          </Card>
-          <Card size="sm">
-            <CardContent className="pt-4">
-              <div className="text-2xl font-bold">
-                {totals.activeSubscriptions}
-              </div>
-              <p className="text-muted-foreground text-xs">活跃订阅</p>
-            </CardContent>
-          </Card>
-          <Card size="sm">
-            <CardContent className="pt-4">
-              <div className="text-2xl font-bold">
-                ${totals.totalCredits.toFixed(2)}
-              </div>
-              <p className="text-muted-foreground text-xs">总额度</p>
-            </CardContent>
-          </Card>
-          <Card size="sm">
-            <CardContent className="pt-4">
-              <div className="text-2xl font-bold text-green-600">
-                ${totals.remainingCredits.toFixed(2)}
-              </div>
-              <p className="text-muted-foreground text-xs">剩余额度</p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {relayPulseEnabled && (
-          <div className="mb-8">
-            <RelayPulse88codeCard />
-          </div>
-        )}
-
-        {/* Accounts */}
-        <div className="space-y-4">
-          {accounts.map((account) => (
-            <AccountSummaryCard key={account.id} account={account} />
-          ))}
-        </div>
+        <Button variant="outline" onClick={refreshAll}>
+          <RefreshCw className="mr-1 size-4" />
+          刷新
+        </Button>
       </div>
-    </AutoRefreshEnabledProvider>
+
+      {/* Totals */}
+      <div className="mb-8 grid gap-4 md:grid-cols-4">
+        <Card size="sm">
+          <CardContent className="pt-4">
+            <div className="text-2xl font-bold">{accounts.length}</div>
+            <p className="text-muted-foreground text-xs">账号总数</p>
+          </CardContent>
+        </Card>
+        <Card size="sm">
+          <CardContent className="pt-4">
+            <div className="text-2xl font-bold">
+              {totals.activeSubscriptions}
+            </div>
+            <p className="text-muted-foreground text-xs">活跃订阅</p>
+          </CardContent>
+        </Card>
+        <Card size="sm">
+          <CardContent className="pt-4">
+            <div className="text-2xl font-bold">
+              ${totals.totalCredits.toFixed(2)}
+            </div>
+            <p className="text-muted-foreground text-xs">总额度</p>
+          </CardContent>
+        </Card>
+        <Card size="sm">
+          <CardContent className="pt-4">
+            <div className="text-2xl font-bold text-green-600">
+              ${totals.remainingCredits.toFixed(2)}
+            </div>
+            <p className="text-muted-foreground text-xs">剩余额度</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {relayPulseEnabled && (
+        <div className="mb-8">
+          <RelayPulse88codeCard />
+        </div>
+      )}
+
+      {/* Accounts */}
+      <div className="space-y-4">
+        {accounts.map((account) => (
+          <AccountSummaryCard key={account.id} account={account} />
+        ))}
+      </div>
+    </div>
   )
 }

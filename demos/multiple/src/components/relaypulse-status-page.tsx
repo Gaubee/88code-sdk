@@ -6,9 +6,7 @@ import type {
   RelayPulseStatusEntry,
 } from '@gaubee/88code-sdk'
 import { useRelayPulseStatus } from '@/lib/relaypulse-queries'
-import { AutoRefreshEnabledProvider } from '@/lib/auto-refresh-context'
 import { Label } from '@/components/ui/label'
-import { Switch } from '@/components/ui/switch'
 import {
   computeRelayPulseAvailabilityPercent,
   formatRelayPulseTimestampSeconds,
@@ -107,25 +105,6 @@ function StatusTrend({ entry }: { entry: RelayPulseStatusEntry }) {
 }
 
 export function RelayPulseStatusPage() {
-  const [autoRefreshEnabled, setAutoRefreshEnabled] = React.useState(true)
-
-  return (
-    <AutoRefreshEnabledProvider enabled={autoRefreshEnabled}>
-      <RelayPulseStatusPageContent
-        autoRefreshEnabled={autoRefreshEnabled}
-        onAutoRefreshChange={setAutoRefreshEnabled}
-      />
-    </AutoRefreshEnabledProvider>
-  )
-}
-
-function RelayPulseStatusPageContent({
-  autoRefreshEnabled,
-  onAutoRefreshChange,
-}: {
-  autoRefreshEnabled: boolean
-  onAutoRefreshChange: (enabled: boolean) => void
-}) {
   const [period, setPeriod] = React.useState<RelayPulsePeriod>('90m')
   const [board, setBoard] = React.useState<RelayPulseBoard>('hot')
   const [category, setCategory] =
@@ -214,33 +193,18 @@ function RelayPulseStatusPageContent({
             基于 RelayPulse 的公开探测数据（按 period 聚合）
           </p>
         </div>
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <Switch
-              id="auto-refresh-status"
-              checked={autoRefreshEnabled}
-              onCheckedChange={onAutoRefreshChange}
-            />
-            <Label
-              htmlFor="auto-refresh-status"
-              className="cursor-pointer text-sm"
-            >
-              自动刷新
-            </Label>
-          </div>
-          <Button
-            variant="outline"
-            onClick={() => refetch()}
-            disabled={isFetching}
-          >
-            <RefreshCw
-              className={
-                isFetching ? 'mr-1 size-4 animate-spin' : 'mr-1 size-4'
-              }
-            />
-            刷新
-          </Button>
-        </div>
+        <Button
+          variant="outline"
+          onClick={() => refetch()}
+          disabled={isFetching}
+        >
+          <RefreshCw
+            className={
+              isFetching ? 'mr-1 size-4 animate-spin' : 'mr-1 size-4'
+            }
+          />
+          刷新
+        </Button>
       </div>
 
       <Card>

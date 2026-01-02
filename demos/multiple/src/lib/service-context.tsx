@@ -18,6 +18,13 @@ import { Code88Service } from './services/code88-service'
 import { AutoResetService } from './services/auto-reset-service'
 import { RefreshProvider } from './refresh-context'
 
+const code88 = new Code88Service()
+const autoReset = new AutoResetService(code88)
+
+export function startBackgroundServices(): void {
+  autoReset.startPolling()
+}
+
 // ===== Context 类型 =====
 
 interface ServiceContextValue {
@@ -63,9 +70,6 @@ interface ServiceProviderProps {
 
 export function ServiceProvider({ children }: ServiceProviderProps) {
   const { settings, updateSettings, setRefreshInterval } = useSettings()
-
-  const code88 = React.useMemo(() => new Code88Service(), [])
-  const autoReset = React.useMemo(() => new AutoResetService(code88), [code88])
 
   const [accounts, setAccounts] = React.useState<Account[]>([])
   const [currentAccount, setCurrentAccount] = React.useState<Account | null>(

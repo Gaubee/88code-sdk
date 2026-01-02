@@ -54,7 +54,7 @@ export interface SmartResetSchedulerConfig {
  */
 export class SmartResetScheduler {
   private config: SmartResetSchedulerConfig
-  private timerId: ReturnType<typeof setTimeout> | null = null
+  private timerId: ReturnType<typeof setInterval> | null = null
   private running = false
 
   constructor(config: SmartResetSchedulerConfig) {
@@ -80,7 +80,6 @@ export class SmartResetScheduler {
     const currentWindow = getCurrentResetWindow()
 
     if (!currentWindow) {
-      this.log('info', '当前不在重置窗口内，跳过执行')
       return {
         executed: false,
         window: null,
@@ -222,7 +221,16 @@ export class SmartResetScheduler {
       `重置窗口: ${RESET_WINDOWS.map((w) => `${w.hour}:${String(w.minute).padStart(2, '0')}`).join(', ')}`,
     )
 
-    this.scheduleNext()
+    const runOnce = async () => {
+      try {
+        await this.checkAndExecute()
+      } catch (err) {
+        this.log('error', '执行出错:', err)
+      }
+    }
+
+    void runOnce()
+    this.timerId = setInterval(runOnce, 30_000)
   }
 
   /**
@@ -230,7 +238,7 @@ export class SmartResetScheduler {
    */
   stop(): void {
     if (this.timerId) {
-      clearTimeout(this.timerId)
+      clearInterval(this.timerId)
       this.timerId = null
     }
     this.running = false
@@ -250,34 +258,6 @@ export class SmartResetScheduler {
   getNextExecutionTime(): Date | null {
     const next = getNextResetTime()
     return next?.time ?? null
-  }
-
-  private scheduleNext(): void {
-    if (!this.running) return
-
-    const next = getNextResetTime()
-    if (!next) {
-      this.log('warn', '无法计算下次执行时间')
-      return
-    }
-
-    const delay = next.time.getTime() - Date.now()
-    this.log(
-      'info',
-      `下次执行: ${next.time.toLocaleString()} (${Math.round(delay / 1000 / 60)} 分钟后)`,
-    )
-
-    this.timerId = setTimeout(
-      async () => {
-        try {
-          await this.checkAndExecute()
-        } catch (err) {
-          this.log('error', '执行出错:', err)
-        }
-        this.scheduleNext()
-      },
-      Math.max(delay, 1000),
-    )
   }
 }
 

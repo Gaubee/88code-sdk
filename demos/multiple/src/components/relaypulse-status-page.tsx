@@ -6,7 +6,7 @@ import type {
   RelayPulseStatusEntry,
 } from '@gaubee/88code-sdk'
 import { useRelayPulseStatus } from '@/lib/relaypulse-queries'
-import { useAutoRefresh } from '@/lib/use-sdk'
+import { AutoRefreshEnabledProvider } from '@/lib/auto-refresh-context'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import {
@@ -107,8 +107,25 @@ function StatusTrend({ entry }: { entry: RelayPulseStatusEntry }) {
 }
 
 export function RelayPulseStatusPage() {
-  const { enabled: autoRefreshEnabled, toggle: toggleAutoRefresh } =
-    useAutoRefresh()
+  const [autoRefreshEnabled, setAutoRefreshEnabled] = React.useState(true)
+
+  return (
+    <AutoRefreshEnabledProvider enabled={autoRefreshEnabled}>
+      <RelayPulseStatusPageContent
+        autoRefreshEnabled={autoRefreshEnabled}
+        onAutoRefreshChange={setAutoRefreshEnabled}
+      />
+    </AutoRefreshEnabledProvider>
+  )
+}
+
+function RelayPulseStatusPageContent({
+  autoRefreshEnabled,
+  onAutoRefreshChange,
+}: {
+  autoRefreshEnabled: boolean
+  onAutoRefreshChange: (enabled: boolean) => void
+}) {
   const [period, setPeriod] = React.useState<RelayPulsePeriod>('90m')
   const [board, setBoard] = React.useState<RelayPulseBoard>('hot')
   const [category, setCategory] =
@@ -202,7 +219,7 @@ export function RelayPulseStatusPage() {
             <Switch
               id="auto-refresh-status"
               checked={autoRefreshEnabled}
-              onCheckedChange={toggleAutoRefresh}
+              onCheckedChange={onAutoRefreshChange}
             />
             <Label
               htmlFor="auto-refresh-status"
@@ -236,13 +253,16 @@ export function RelayPulseStatusPage() {
         <CardContent>
           <div className="grid gap-3 md:grid-cols-7">
             <div className="md:col-span-1">
+              <Label htmlFor="relaypulse-period" className="text-muted-foreground mb-1 block text-xs">
+                时间范围
+              </Label>
               <Select
                 value={period}
                 onValueChange={(v) => {
                   if (isRelayPulsePeriod(v)) setPeriod(v)
                 }}
               >
-                <SelectTrigger>
+                <SelectTrigger id="relaypulse-period">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -255,13 +275,16 @@ export function RelayPulseStatusPage() {
               </Select>
             </div>
             <div className="md:col-span-1">
+              <Label htmlFor="relaypulse-board" className="text-muted-foreground mb-1 block text-xs">
+                榜单
+              </Label>
               <Select
                 value={board}
                 onValueChange={(v) => {
                   if (isRelayPulseBoard(v)) setBoard(v)
                 }}
               >
-                <SelectTrigger>
+                <SelectTrigger id="relaypulse-board">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -274,13 +297,16 @@ export function RelayPulseStatusPage() {
               </Select>
             </div>
             <div className="md:col-span-1">
+              <Label htmlFor="relaypulse-category" className="text-muted-foreground mb-1 block text-xs">
+                分类
+              </Label>
               <Select
                 value={category}
                 onValueChange={(v) => {
                   if (isRelayPulseCategory(v)) setCategory(v)
                 }}
               >
-                <SelectTrigger>
+                <SelectTrigger id="relaypulse-category">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -291,11 +317,14 @@ export function RelayPulseStatusPage() {
               </Select>
             </div>
             <div className="md:col-span-1">
+              <Label htmlFor="relaypulse-provider" className="text-muted-foreground mb-1 block text-xs">
+                Provider
+              </Label>
               <Select
                 value={provider}
                 onValueChange={(v) => v && setProvider(v)}
               >
-                <SelectTrigger>
+                <SelectTrigger id="relaypulse-provider">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -309,8 +338,11 @@ export function RelayPulseStatusPage() {
               </Select>
             </div>
             <div className="md:col-span-1">
+              <Label htmlFor="relaypulse-service" className="text-muted-foreground mb-1 block text-xs">
+                Service
+              </Label>
               <Select value={service} onValueChange={(v) => v && setService(v)}>
-                <SelectTrigger>
+                <SelectTrigger id="relaypulse-service">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -324,8 +356,11 @@ export function RelayPulseStatusPage() {
               </Select>
             </div>
             <div className="md:col-span-1">
+              <Label htmlFor="relaypulse-channel" className="text-muted-foreground mb-1 block text-xs">
+                Channel
+              </Label>
               <Select value={channel} onValueChange={(v) => v && setChannel(v)}>
-                <SelectTrigger>
+                <SelectTrigger id="relaypulse-channel">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -339,13 +374,16 @@ export function RelayPulseStatusPage() {
               </Select>
             </div>
             <div className="md:col-span-1">
+              <Label htmlFor="relaypulse-sort" className="text-muted-foreground mb-1 block text-xs">
+                排序
+              </Label>
               <Select
                 value={sort}
                 onValueChange={(v) => {
                   if (isSortOption(v)) setSort(v)
                 }}
               >
-                <SelectTrigger>
+                <SelectTrigger id="relaypulse-sort">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -358,7 +396,11 @@ export function RelayPulseStatusPage() {
               </Select>
             </div>
             <div className="md:col-span-7">
+              <Label htmlFor="relaypulse-search" className="text-muted-foreground mb-1 block text-xs">
+                搜索
+              </Label>
               <Input
+                id="relaypulse-search"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="搜索 provider/service/channel..."

@@ -8,8 +8,6 @@ import { useSyncExternalStore, useCallback } from 'react'
 // ===== 类型定义 =====
 
 export interface AppSettings {
-  /** 是否启用自动刷新 */
-  autoRefreshEnabled: boolean
   /** 自动刷新间隔 (毫秒) */
   autoRefreshInterval: number
   /** 是否启用 RelayPulse 服务状态监控 */
@@ -36,7 +34,6 @@ export const REFRESH_INTERVALS = [
 
 /** 默认设置 */
 const DEFAULT_SETTINGS: AppSettings = {
-  autoRefreshEnabled: true,
   autoRefreshInterval: 5000, // 默认 5 秒
   relayPulseEnabled: false, // 默认关闭，需要本地代理
   relayPulseBaseUrl: '', // 空表示使用默认地址
@@ -131,10 +128,6 @@ export function useSettings() {
     resetSettings()
   }, [])
 
-  const toggleAutoRefresh = useCallback(() => {
-    updateSettings({ autoRefreshEnabled: !currentSettings.autoRefreshEnabled })
-  }, [currentSettings.autoRefreshEnabled])
-
   const setRefreshInterval = useCallback((interval: number) => {
     updateSettings({ autoRefreshInterval: interval })
   }, [])
@@ -143,7 +136,6 @@ export function useSettings() {
     settings: currentSettings,
     updateSettings: update,
     resetSettings: reset,
-    toggleAutoRefresh,
     setRefreshInterval,
   }
 }

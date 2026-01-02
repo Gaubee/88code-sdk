@@ -31,7 +31,6 @@ interface ServiceContextValue {
   // 设置
   settings: AppSettings
   updateSettings: (partial: Partial<AppSettings>) => void
-  toggleAutoRefresh: () => void
   setRefreshInterval: (interval: number) => void
 
   // 账号
@@ -66,8 +65,7 @@ interface ServiceProviderProps {
 }
 
 export function ServiceProvider({ children }: ServiceProviderProps) {
-  const { settings, updateSettings, toggleAutoRefresh, setRefreshInterval } =
-    useSettings()
+  const { settings, updateSettings, setRefreshInterval } = useSettings()
 
   const code88 = React.useMemo(() => new Code88Service(), [])
   const autoReset = React.useMemo(() => new AutoResetService(code88), [code88])
@@ -144,7 +142,6 @@ export function ServiceProvider({ children }: ServiceProviderProps) {
       autoReset,
       settings,
       updateSettings,
-      toggleAutoRefresh,
       setRefreshInterval,
       accounts,
       currentAccount,
@@ -160,7 +157,6 @@ export function ServiceProvider({ children }: ServiceProviderProps) {
       autoReset,
       settings,
       updateSettings,
-      toggleAutoRefresh,
       setRefreshInterval,
       accounts,
       currentAccount,
@@ -196,17 +192,6 @@ export function useAccounts() {
 export function useCurrentAccount() {
   const { currentAccount, setCurrentAccount } = useService()
   return { currentAccount, setCurrentAccount }
-}
-
-/** 只获取自动刷新设置 */
-export function useAutoRefresh() {
-  const { settings, toggleAutoRefresh, setRefreshInterval } = useService()
-  return {
-    enabled: settings.autoRefreshEnabled,
-    interval: settings.autoRefreshInterval,
-    toggle: toggleAutoRefresh,
-    setInterval: setRefreshInterval,
-  }
 }
 
 /** 只获取 RelayPulse 设置 */

@@ -8,13 +8,19 @@ import { Code88Client, Code88Queries } from '@gaubee/88code-sdk'
 import {
   useService,
   useAccounts as useAccountsFromContext,
-  useAutoRefresh,
 } from './service-context'
+export { useService } from './service-context'
 import type { Account } from './accounts-store'
 import { DEFAULT_API_HOST } from './accounts-store'
 
-// 重新导出 service-context 的 hooks
-export { useService, useAutoRefresh }
+export {
+  AutoRefreshEnabledProvider,
+  AutoRefreshIntervalProvider,
+  useAutoRefreshEnabled,
+  useAutoRefreshInterval,
+  useAutoRefresh,
+} from './auto-refresh-context'
+
 export { useSettings } from './settings-store'
 
 /**

@@ -22,6 +22,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
 import { useAutoResetSettings } from '@/lib/auto-reset-store'
+import { Separator } from '@/components/ui/separator'
 
 type SubscriptionPlanType = 'MONTHLY' | 'PAY_PER_USE'
 
@@ -122,12 +123,13 @@ export function SubscriptionPlanCard({
               </Badge>
             )}
           </div>
-          <p className="text-muted-foreground mt-1 text-xs">
+          <p className="text-muted-foreground mt-1 text-xs inline-flex flex-wrap gap-1">
             剩余 {subscription.remainingDays ?? 0} 天
             {showResetMeta && (
               <>
                 {' '}
-                | 重置次数:{' '}
+                <Separator orientation="vertical" />
+                重置次数:{' '}
                 <span
                   className={
                     (subscription.resetTimes ?? 0) >= 2
@@ -142,7 +144,8 @@ export function SubscriptionPlanCard({
                 {subscription.lastCreditReset && (
                   <>
                     {' '}
-                    | 上次重置:{' '}
+                    <Separator orientation="vertical" />
+                    上次重置:{' '}
                     {new Date(subscription.lastCreditReset).toLocaleString()}
                   </>
                 )}

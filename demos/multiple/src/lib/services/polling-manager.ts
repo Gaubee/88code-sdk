@@ -6,7 +6,8 @@ interface Entry {
   keyHash: string
   queryKey: QueryKey
   queryFn: QueryFn
-  enabled: boolean
+  subscribers: number
+  enabledSubscribers: number
   running: boolean
   abortController: AbortController | null
   /**
@@ -98,43 +99,57 @@ export class PollingManager {
     enabled: boolean,
   ): () => void {
     const keyHash = hashQueryKey(queryKey)
-    let entry = this.entries.get(keyHash)
-
-    if (!entry) {
-      entry = {
+    const entry: Entry =
+      this.entries.get(keyHash) ??
+      {
         keyHash,
         queryKey,
         queryFn,
-        enabled,
+        subscribers: 0,
+        enabledSubscribers: 0,
         running: false,
         abortController: null,
         lastAttemptAt: 0,
       }
-      this.entries.set(keyHash, entry)
-    } else {
-      // 更新
-      entry.queryKey = queryKey
-      entry.queryFn = queryFn
+
+    entry.queryKey = queryKey
+    entry.queryFn = queryFn
+    entry.subscribers += 1
+    if (enabled) {
+      entry.enabledSubscribers += 1
     }
+    this.entries.set(keyHash, entry)
 
-    const prevEnabled = entry.enabled
-    entry.enabled = enabled
-
-    // enabled 变化时唤醒 loop
-    if (prevEnabled !== enabled) {
+    if (!entry.running) {
+      this.startLoop(entry)
+    } else {
+      // enabled 状态变化时唤醒 loop
       entry.abortController?.abort()
     }
 
-    // 启动 loop
-    if (enabled && !entry.running) {
-      this.startLoop(entry)
-    }
+    const subscriptionEnabled = enabled
 
     return () => {
       const current = this.entries.get(keyHash)
       if (!current) return
-      current.enabled = false
-      current.abortController?.abort()
+
+      current.subscribers = Math.max(0, current.subscribers - 1)
+      if (subscriptionEnabled) {
+        current.enabledSubscribers = Math.max(
+          0,
+          current.enabledSubscribers - 1,
+        )
+      }
+
+      // 没有任何启用者：停止轮询（但保留 entry 以保存 lastAttemptAt / cache）
+      if (current.enabledSubscribers === 0) {
+        current.abortController?.abort()
+      }
+
+      // 没有订阅者：停止 loop
+      if (current.subscribers === 0) {
+        current.abortController?.abort()
+      }
     }
   }
 
@@ -145,8 +160,8 @@ export class PollingManager {
     void this.runLoop(entry).finally(() => {
       entry.running = false
       entry.abortController = null
-      // 如果 loop 结束时仍然 enabled，则重启
-      if (entry.enabled) {
+      // 如果 loop 结束时仍然有人订阅且有人启用，则重启（例如：sleep 被 abort 唤醒时）
+      if (entry.subscribers > 0 && entry.enabledSubscribers > 0) {
         this.startLoop(entry)
       }
     })
@@ -159,8 +174,8 @@ export class PollingManager {
   }
 
   private async runLoop(entry: Entry): Promise<void> {
-    while (entry.enabled) {
-      // 确保第一次能拉到数据
+    while (entry.subscribers > 0) {
+      // 确保第一次订阅能拉到数据（即使轮询被关闭）
       const hasCache =
         this.queryClient.getQueryData(entry.queryKey) !== undefined
       if (!hasCache) {
@@ -168,7 +183,7 @@ export class PollingManager {
         continue
       }
 
-      if (!entry.enabled) {
+      if (entry.enabledSubscribers <= 0) {
         return
       }
 
@@ -182,7 +197,8 @@ export class PollingManager {
       await sleep(Math.max(0, delay), controller.signal)
 
       // 检查条件
-      if (!entry.enabled) return
+      if (entry.subscribers <= 0) return
+      if (entry.enabledSubscribers <= 0) return
       if (controller.signal.aborted) {
         entry.abortController = new AbortController()
         continue

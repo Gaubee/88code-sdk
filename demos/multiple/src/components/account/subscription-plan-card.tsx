@@ -123,35 +123,37 @@ export function SubscriptionPlanCard({
               </Badge>
             )}
           </div>
-          <p className="text-muted-foreground mt-1 text-xs inline-flex flex-wrap gap-1">
-            剩余 {subscription.remainingDays ?? 0} 天
+          <div className="text-muted-foreground mt-1 text-xs inline-flex flex-wrap items-center gap-1">
+            <span>剩余 {subscription.remainingDays ?? 0} 天</span>
             {showResetMeta && (
               <>
-                {' '}
-                <Separator orientation="vertical" />
-                重置次数:{' '}
-                <span
-                  className={
-                    (subscription.resetTimes ?? 0) >= 2
-                      ? 'font-medium text-green-600 dark:text-green-400'
-                      : (subscription.resetTimes ?? 0) === 1
-                        ? 'font-medium text-blue-600 dark:text-blue-400'
-                        : ''
-                  }
-                >
-                  {subscription.resetTimes ?? 0}
+                <Separator orientation="vertical" className="h-3" />
+                <span>
+                  重置次数:{' '}
+                  <span
+                    className={
+                      (subscription.resetTimes ?? 0) >= 2
+                        ? 'font-medium text-green-600 dark:text-green-400'
+                        : (subscription.resetTimes ?? 0) === 1
+                          ? 'font-medium text-blue-600 dark:text-blue-400'
+                          : ''
+                    }
+                  >
+                    {subscription.resetTimes ?? 0}
+                  </span>
                 </span>
                 {subscription.lastCreditReset && (
                   <>
-                    {' '}
-                    <Separator orientation="vertical" />
-                    上次重置:{' '}
-                    {new Date(subscription.lastCreditReset).toLocaleString()}
+                    <Separator orientation="vertical" className="h-3" />
+                    <span>
+                      上次重置:{' '}
+                      {new Date(subscription.lastCreditReset).toLocaleString()}
+                    </span>
                   </>
                 )}
               </>
             )}
-          </p>
+          </div>
           {showFeatures && subscription.subscriptionPlan?.features && (
             <p className="text-muted-foreground mt-2 text-xs whitespace-pre-wrap">
               {subscription.subscriptionPlan.features}

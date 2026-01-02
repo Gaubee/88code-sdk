@@ -11,7 +11,8 @@ import {
   LoadingCard,
   QueryErrorFallback,
 } from '@/components/ui/card-error-boundary'
-import { useCodexFreeQuota } from '@/lib/queries'
+import { DebugRefreshInfo } from '@/components/ui/debug-refresh-info'
+import { useCodexFreeQuota, queryKeys } from '@/lib/queries'
 import type { Account } from '@/lib/accounts-store'
 
 interface Props {
@@ -66,6 +67,10 @@ export function CodexFreeCard({ account }: Props) {
         <CardDescription>
           Codex 每日免费额度，每天 0:00 自动重置
         </CardDescription>
+        <DebugRefreshInfo
+          queryKey={queryKeys.codexFreeQuota(account.id)}
+          label="codexFreeQuota"
+        />
       </CardHeader>
       <CardContent>
         <div className="space-y-3">

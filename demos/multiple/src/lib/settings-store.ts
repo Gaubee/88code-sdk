@@ -14,6 +14,8 @@ export interface AppSettings {
   relayPulseEnabled: boolean
   /** RelayPulse 自定义 API 地址（用于本地代理） */
   relayPulseBaseUrl: string
+  /** 调试模式：显示轮询相关信息 */
+  debugMode: boolean
 }
 
 /** RelayPulse 默认地址 */
@@ -37,6 +39,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   autoRefreshInterval: 5000, // 默认 5 秒
   relayPulseEnabled: false, // 默认关闭，需要本地代理
   relayPulseBaseUrl: '', // 空表示使用默认地址
+  debugMode: false, // 默认关闭调试模式
 }
 
 // ===== Store 实现 =====

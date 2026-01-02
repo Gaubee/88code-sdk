@@ -16,6 +16,7 @@ import {
   Upload,
   FileJson,
   Zap,
+  Bug,
 } from 'lucide-react'
 import { buttonVariants } from '@/components/ui/button'
 import { useAccounts } from '@/lib/use-sdk'
@@ -70,7 +71,7 @@ const CUSTOM_HOST_VALUE = '__custom__'
 
 export function SettingsPanel() {
   const { accounts, addAccount, removeAccount, updateAccount } = useAccounts()
-  const { settings, setRefreshInterval } = useSettings()
+  const { settings, setRefreshInterval, updateSettings } = useSettings()
   const {
     enabled: relayPulseEnabled,
     baseUrl: relayPulseBaseUrl,
@@ -252,7 +253,7 @@ export function SettingsPanel() {
               <div>
                 <Label className="text-sm font-medium">刷新间隔</Label>
                 <p className="text-muted-foreground mt-0.5 text-xs">
-                  自动刷新的时间间隔（页面级开关控制是否启用）
+                  自动刷新的时间间隔
                 </p>
               </div>
               <Select
@@ -273,6 +274,29 @@ export function SettingsPanel() {
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+
+            {/* 调试模式 */}
+            <div className="flex items-center justify-between">
+              <div>
+                <Label
+                  htmlFor="debug-mode"
+                  className="flex items-center gap-2 text-sm font-medium"
+                >
+                  <Bug className="size-4" />
+                  调试模式
+                </Label>
+                <p className="text-muted-foreground mt-0.5 text-xs">
+                  在每个数据卡片显示最后刷新时间，用于排查轮询问题
+                </p>
+              </div>
+              <Switch
+                id="debug-mode"
+                checked={settings.debugMode}
+                onCheckedChange={(checked) =>
+                  updateSettings({ debugMode: checked })
+                }
+              />
             </div>
           </div>
         </CardContent>

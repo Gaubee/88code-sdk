@@ -5,7 +5,8 @@ import {
   LoadingCard,
   QueryErrorFallback,
 } from '@/components/ui/card-error-boundary'
-import { useModelUsage } from '@/lib/queries'
+import { DebugRefreshInfo } from '@/components/ui/debug-refresh-info'
+import { useModelUsage, queryKeys } from '@/lib/queries'
 import type { Account } from '@/lib/accounts-store'
 
 interface Props {
@@ -58,6 +59,10 @@ export function ModelUsageCard({ account }: Props) {
           <BarChart3 className="size-4" />
           模型用量 (30天)
         </CardTitle>
+        <DebugRefreshInfo
+          queryKey={queryKeys.modelUsage(account.id)}
+          label="modelUsage"
+        />
       </CardHeader>
       <CardContent>
         {modelStats.size === 0 ? (

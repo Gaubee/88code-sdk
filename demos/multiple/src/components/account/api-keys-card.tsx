@@ -5,7 +5,8 @@ import {
   LoadingCard,
   QueryErrorFallback,
 } from '@/components/ui/card-error-boundary'
-import { useApiKeys } from '@/lib/queries'
+import { DebugRefreshInfo } from '@/components/ui/debug-refresh-info'
+import { useApiKeys, queryKeys } from '@/lib/queries'
 import type { Account } from '@/lib/accounts-store'
 
 interface Props {
@@ -38,6 +39,10 @@ export function ApiKeysCard({ account }: Props) {
           <Key className="size-4" />
           API Keys ({keys.length})
         </CardTitle>
+        <DebugRefreshInfo
+          queryKey={queryKeys.apiKeys(account.id)}
+          label="apiKeys"
+        />
       </CardHeader>
       <CardContent>
         {keys.length === 0 ? (

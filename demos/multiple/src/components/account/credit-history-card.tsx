@@ -13,7 +13,8 @@ import {
   LoadingCard,
   QueryErrorFallback,
 } from '@/components/ui/card-error-boundary'
-import { useCreditHistory } from '@/lib/queries'
+import { DebugRefreshInfo } from '@/components/ui/debug-refresh-info'
+import { useCreditHistory, queryKeys } from '@/lib/queries'
 import type { Account } from '@/lib/accounts-store'
 
 interface Props {
@@ -51,6 +52,10 @@ export function CreditHistoryCard({ account }: Props) {
           <History className="size-4" />
           Credit 变更历史 (最近 50 条)
         </CardTitle>
+        <DebugRefreshInfo
+          queryKey={queryKeys.creditHistory(account.id)}
+          label="creditHistory"
+        />
       </CardHeader>
       <CardContent>
         {history.length === 0 ? (

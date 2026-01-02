@@ -11,7 +11,8 @@ import {
   LoadingCard,
   QueryErrorFallback,
 } from '@/components/ui/card-error-boundary'
-import { useSubscriptions, useResetCredits } from '@/lib/queries'
+import { DebugRefreshInfo } from '@/components/ui/debug-refresh-info'
+import { useSubscriptions, useResetCredits, queryKeys } from '@/lib/queries'
 import type { Account } from '@/lib/accounts-store'
 import { SubscriptionPlanCard } from './subscription-plan-card'
 import { useState } from 'react'
@@ -69,6 +70,10 @@ export function SubscriptionsCard({ account }: Props) {
           订阅与额度
         </CardTitle>
         <CardDescription>当前活跃的订阅计划及额度使用情况</CardDescription>
+        <DebugRefreshInfo
+          queryKey={queryKeys.subscriptions(account.id)}
+          label="subscriptions"
+        />
       </CardHeader>
       <CardContent>
         {!subscriptions || subscriptions.length === 0 ? (

@@ -31,7 +31,7 @@ export function Layout({ children }: LayoutProps) {
 
   return (
     <SidebarProvider defaultOpen={true}>
-      <Sidebar collapsible="offcanvas">
+      <Sidebar collapsible="icon">
         <SidebarHeader className="border-b px-4 py-3">
           <div className="flex items-center gap-2">
             <img
@@ -41,7 +41,7 @@ export function Layout({ children }: LayoutProps) {
               height={28}
               className="rounded-none"
             />
-            <div className="min-w-0">
+            <div className="min-w-0 group-data-[collapsible=icon]:hidden">
               <h1 className="text-base leading-none font-semibold">
                 88Code Manager
               </h1>
@@ -133,9 +133,8 @@ export function Layout({ children }: LayoutProps) {
       </Sidebar>
 
       <SidebarInset>
-        {/* 移动端顶部栏 */}
-        <header className="flex h-12 shrink-0 items-center gap-2 border-b px-4 md:hidden">
-          <SidebarTrigger />
+        {/* 顶部栏 */}
+        <header className="flex h-12 shrink-0 items-center gap-2 border-b px-4">
           <img
             src={logoUrl}
             alt="88code"
@@ -144,6 +143,12 @@ export function Layout({ children }: LayoutProps) {
             className="rounded-none"
           />
           <span className="text-sm font-semibold">88Code Manager</span>
+          <div className="ml-auto flex items-center gap-2">
+            <span className="text-muted-foreground hidden text-xs sm:inline">
+              自动隐藏
+            </span>
+            <SidebarTrigger />
+          </div>
         </header>
 
         {/* 主内容区 */}

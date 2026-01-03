@@ -100,5 +100,8 @@ export function useRelayPulseStatus(options: UseRelayPulseStatusOptions = {}) {
 
   useRegisterRefetch(JSON.stringify(queryKey), query.refetch, enabled)
 
-  return query
+  return {
+    ...query,
+    queryKey,
+  }
 }

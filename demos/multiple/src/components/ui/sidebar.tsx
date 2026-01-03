@@ -512,22 +512,41 @@ function SidebarMenuButton({
   size = 'default',
   tooltip,
   className,
+  onClick,
   ...props
 }: useRender.ComponentProps<'button'> &
   React.ComponentProps<'button'> & {
     isActive?: boolean
     tooltip?: string | React.ComponentProps<typeof TooltipContent>
   } & VariantProps<typeof sidebarMenuButtonVariants>) {
-  const { isMobile, state } = useSidebar()
+  const { isMobile, state, setOpenMobile } = useSidebar()
+
+  const handleClick = React.useCallback(
+    (event: React.MouseEvent) => {
+      onClick?.(event)
+      if (event.defaultPrevented) return
+      if (!isMobile) return
+      setOpenMobile(false)
+    },
+    [isMobile, onClick, setOpenMobile],
+  )
+
+  const renderWithTooltip = React.useMemo(() => {
+    if (!tooltip) return render
+    if (!render) return render
+    return <TooltipTrigger render={render} />
+  }, [tooltip, render])
+
   const comp = useRender({
     defaultTagName: 'button',
     props: mergeProps<'button'>(
       {
         className: cn(sidebarMenuButtonVariants({ variant, size }), className),
+        onClick: handleClick,
       },
       props,
     ),
-    render: !tooltip ? render : TooltipTrigger,
+    render: renderWithTooltip,
     state: {
       slot: 'sidebar-menu-button',
       sidebar: 'menu-button',

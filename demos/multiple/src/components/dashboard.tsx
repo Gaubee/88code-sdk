@@ -25,6 +25,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
+import { DebugRefreshInfo } from '@/components/ui/debug-refresh-info'
 import {
   Table,
   TableBody,
@@ -212,6 +213,18 @@ function AccountSummaryCard({ account }: { account: Account }) {
             </Button>
           </Link>
         </div>
+        <DebugRefreshInfo
+          queryKey={queryKeys.loginInfo(account.id)}
+          label="登录信息"
+        />
+        <DebugRefreshInfo
+          queryKey={queryKeys.subscriptions(account.id)}
+          label="订阅"
+        />
+        <DebugRefreshInfo
+          queryKey={queryKeys.codexFreeQuota(account.id)}
+          label="Codex Free"
+        />
       </CardHeader>
       <CardContent>
         {subsQuery.isLoading && !subsQuery.data ? (
@@ -378,6 +391,8 @@ function RelayPulse88codeCard() {
             </Button>
           </Link>
         </div>
+        <DebugRefreshInfo queryKey={ccQuery.queryKey} label="RelayPulse CC" />
+        <DebugRefreshInfo queryKey={cxQuery.queryKey} label="RelayPulse CX" />
       </CardHeader>
       <CardContent className="space-y-4">
         <RelayPulseServiceSection

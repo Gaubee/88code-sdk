@@ -1,5 +1,5 @@
 import { Link, useLocation } from '@tanstack/react-router'
-import { Activity, Home, Settings, User } from 'lucide-react'
+import { Activity, Home, Settings } from 'lucide-react'
 import { useAccounts } from '@/lib/use-sdk'
 import { useRelayPulseSettings } from '@/lib/service-context'
 import {
@@ -18,6 +18,7 @@ import {
   SidebarTrigger,
 } from '@/components/ui/sidebar'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import { AccountAvatar } from '@/components/ui/account-avatar'
 
 interface LayoutProps {
   children: React.ReactNode
@@ -32,8 +33,8 @@ export function Layout({ children }: LayoutProps) {
   return (
     <SidebarProvider defaultOpen={true}>
       <Sidebar collapsible="icon">
-        <SidebarHeader className="border-b px-4 py-3">
-          <div className="flex items-center gap-2">
+        <SidebarHeader className="border-b px-4 py-3 group-data-[collapsible=icon]:px-2 group-data-[collapsible=icon]:py-2">
+          <div className="flex items-center gap-2 group-data-[collapsible=icon]:flex-col group-data-[collapsible=icon]:items-center">
             <img
               src={logoUrl}
               alt="88code"
@@ -48,6 +49,9 @@ export function Layout({ children }: LayoutProps) {
               <p className="text-muted-foreground mt-1 truncate text-xs">
                 多账号管理面板
               </p>
+            </div>
+            <div className="ml-auto flex items-center group-data-[collapsible=icon]:ml-0">
+              <SidebarTrigger />
             </div>
           </div>
         </SidebarHeader>
@@ -105,8 +109,13 @@ export function Layout({ children }: LayoutProps) {
                         isActive={
                           location.pathname === `/account/${account.id}`
                         }
+                        tooltip={account.name}
                       >
-                        <User className="size-4" />
+                        <AccountAvatar
+                          seed={account.id}
+                          name={account.name}
+                          className="size-4"
+                        />
                         <span className="truncate">{account.name}</span>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
@@ -133,8 +142,9 @@ export function Layout({ children }: LayoutProps) {
       </Sidebar>
 
       <SidebarInset>
-        {/* 顶部栏 */}
-        <header className="flex h-12 shrink-0 items-center gap-2 border-b px-4">
+        {/* 移动端顶部栏 */}
+        <header className="flex h-12 shrink-0 items-center gap-2 border-b px-4 md:hidden">
+          <SidebarTrigger />
           <img
             src={logoUrl}
             alt="88code"
@@ -143,12 +153,6 @@ export function Layout({ children }: LayoutProps) {
             className="rounded-none"
           />
           <span className="text-sm font-semibold">88Code Manager</span>
-          <div className="ml-auto flex items-center gap-2">
-            <span className="text-muted-foreground hidden text-xs sm:inline">
-              自动隐藏
-            </span>
-            <SidebarTrigger />
-          </div>
         </header>
 
         {/* 主内容区 */}

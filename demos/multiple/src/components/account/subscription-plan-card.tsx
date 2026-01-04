@@ -91,7 +91,10 @@ export function SubscriptionPlanCard({
     resetTimes <= 0
       ? '无剩余重置次数'
       : inCooldown
-        ? `冷却中（${Math.ceil((cooldownEndMs! - Date.now()) / (60 * 60 * 1000))}小时后可重置）`
+        ? (() => {
+            const nextResetTime = new Date(cooldownEndMs!).toLocaleString()
+            return `冷却中（下次可重置：${nextResetTime}）`
+          })()
         : undefined
   const resetDisabled = !!resetDisabledReason
 
@@ -248,6 +251,13 @@ export function SubscriptionPlanCard({
                 <AlertDialogHeader>
                   <AlertDialogTitle>确认重置额度？</AlertDialogTitle>
                   <AlertDialogDescription>
+                    {inCooldown && (
+                      <span>
+                        冷却中，下次可重置时间：
+                        {new Date(cooldownEndMs!).toLocaleString()}
+                        <br />
+                      </span>
+                    )}
                     将重置 "{subscription.subscriptionPlanName}"
                     的额度到初始值。每日重置次数有限制。
                   </AlertDialogDescription>

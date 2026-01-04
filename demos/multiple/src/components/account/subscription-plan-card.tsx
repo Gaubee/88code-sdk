@@ -233,20 +233,32 @@ export function SubscriptionPlanCard({
           {/* 手动重置按钮 */}
           {canReset && (
             <AlertDialog open={resetDialogOpen} onOpenChange={setResetDialogOpen}>
-              <AlertDialogTrigger
-                className={buttonVariants({
-                  size: variant === 'compact' ? 'xs' : 'sm',
-                })}
-                disabled={resetting || resetDisabled}
-                title={resetDisabledReason}
-              >
-                {resetting ? (
-                  <Loader2 className="size-3 animate-spin" />
-                ) : (
-                  <RefreshCw className="size-3" />
-                )}
-                <span className="ml-1">重置</span>
-              </AlertDialogTrigger>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span title={resetDisabledReason}>
+                      <AlertDialogTrigger
+                        className={buttonVariants({
+                          size: variant === 'compact' ? 'xs' : 'sm',
+                        })}
+                        disabled={resetting || resetDisabled}
+                      >
+                        {resetting ? (
+                          <Loader2 className="size-3 animate-spin" />
+                        ) : (
+                          <RefreshCw className="size-3" />
+                        )}
+                        <span className="ml-1">重置</span>
+                      </AlertDialogTrigger>
+                    </span>
+                  </TooltipTrigger>
+                  {resetDisabledReason && (
+                    <TooltipContent side="bottom">
+                      <p className="text-xs">{resetDisabledReason}</p>
+                    </TooltipContent>
+                  )}
+                </Tooltip>
+              </TooltipProvider>
               <AlertDialogContent>
                 <AlertDialogHeader>
                   <AlertDialogTitle>确认重置额度？</AlertDialogTitle>

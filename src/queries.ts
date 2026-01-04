@@ -305,9 +305,14 @@ export class Code88Queries {
   ): Promise<ApiResult<PagedResponse<CreditHistoryItem>>> {
     const { startTime, endTime, pageNum = 1, pageSize = 20 } = params
 
+    const formatLocalTime = (date: Date): string => {
+      const pad = (n: number) => n.toString().padStart(2, '0')
+      return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`
+    }
     const startTimeStr =
-      startTime instanceof Date ? startTime.toISOString() : startTime
-    const endTimeStr = endTime instanceof Date ? endTime.toISOString() : endTime
+      startTime instanceof Date ? formatLocalTime(startTime) : startTime
+    const endTimeStr =
+      endTime instanceof Date ? formatLocalTime(endTime) : endTime
 
     const searchParams = new URLSearchParams({
       pageNum: String(pageNum),

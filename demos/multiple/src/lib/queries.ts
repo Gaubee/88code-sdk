@@ -206,7 +206,11 @@ export function useCreditHistory(account: Account | null) {
       pageSize: 50,
     })
     if (!result.success) throw new Error(result.message || '获取历史记录失败')
-    return result.data.list
+    // 按 createdAt 降序排序，确保最新记录在前
+    return result.data.list.sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    )
   }, [account?.id, account?.token, account?.apiHost, code88])
 
   const query = useQuery({

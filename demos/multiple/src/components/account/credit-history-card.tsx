@@ -83,7 +83,7 @@ export function CreditHistoryCard({ account }: Props) {
                     </TableCell>
                     <TableCell className="text-muted-foreground text-xs whitespace-nowrap">
                       {item.createdAt
-                        ? new Date(item.createdAt).toLocaleString()
+                        ? new Date(item.createdAt).toLocaleString('zh-CN')
                         : '-'}
                     </TableCell>
                     <TableCell

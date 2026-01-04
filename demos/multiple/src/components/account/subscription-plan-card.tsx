@@ -1,4 +1,5 @@
 import { CreditCard, Loader2, RefreshCw, Zap } from 'lucide-react'
+import { useState } from 'react'
 import type { Subscription } from '@gaubee/88code-sdk'
 import { Badge } from '@/components/ui/badge'
 import { buttonVariants } from '@/components/ui/button'
@@ -67,6 +68,7 @@ export function SubscriptionPlanCard({
   resetting = false,
   onResetCredits,
 }: SubscriptionPlanCardProps) {
+  const [resetDialogOpen, setResetDialogOpen] = useState(false)
   const creditLimit = subscription.subscriptionPlan?.creditLimit ?? 0
   const currentCredits = subscription.currentCredits ?? 0
   const remainingPercent = getRemainingPercent(currentCredits, creditLimit)
@@ -90,6 +92,7 @@ export function SubscriptionPlanCard({
   const handleReset = async () => {
     if (!canReset) return
     await onResetCredits(subscription.id)
+    setResetDialogOpen(false)
   }
 
   const handleSmartResetToggle = (checked: boolean) => {
@@ -207,7 +210,7 @@ export function SubscriptionPlanCard({
 
           {/* 手动重置按钮 */}
           {canReset && (
-            <AlertDialog>
+            <AlertDialog open={resetDialogOpen} onOpenChange={setResetDialogOpen}>
               <AlertDialogTrigger
                 className={buttonVariants({
                   size: variant === 'compact' ? 'xs' : 'sm',

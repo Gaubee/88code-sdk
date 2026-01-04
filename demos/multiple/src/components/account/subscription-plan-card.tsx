@@ -1,6 +1,7 @@
 import { CreditCard, Loader2, RefreshCw, Zap } from 'lucide-react'
 import { useState } from 'react'
 import type { Subscription } from '@gaubee/88code-sdk'
+import { RESET_COOLDOWN_MS } from '@gaubee/88code-sdk'
 import { Badge } from '@/components/ui/badge'
 import { buttonVariants } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
@@ -75,6 +76,24 @@ export function SubscriptionPlanCard({
   const planType = getPlanType(subscription.subscriptionPlan?.planType)
   const canReset =
     planType === 'MONTHLY' && typeof onResetCredits === 'function'
+
+  const resetTimes = subscription.resetTimes ?? 0
+  const lastCreditResetMs = subscription.lastCreditReset
+    ? new Date(subscription.lastCreditReset).getTime()
+    : null
+  const cooldownEndMs =
+    lastCreditResetMs !== null && Number.isFinite(lastCreditResetMs)
+      ? lastCreditResetMs + RESET_COOLDOWN_MS
+      : null
+  const inCooldown = cooldownEndMs !== null && Date.now() < cooldownEndMs
+
+  const resetDisabledReason =
+    resetTimes <= 0
+      ? '无剩余重置次数'
+      : inCooldown
+        ? `冷却中（${Math.ceil((cooldownEndMs! - Date.now()) / (60 * 60 * 1000))}小时后可重置）`
+        : undefined
+  const resetDisabled = !!resetDisabledReason
 
   const showFeatures = variant === 'detail'
   const showResetMeta = planType === 'MONTHLY'
@@ -215,7 +234,8 @@ export function SubscriptionPlanCard({
                 className={buttonVariants({
                   size: variant === 'compact' ? 'xs' : 'sm',
                 })}
-                disabled={resetting}
+                disabled={resetting || resetDisabled}
+                title={resetDisabledReason}
               >
                 {resetting ? (
                   <Loader2 className="size-3 animate-spin" />

@@ -87,9 +87,17 @@ export function SubscriptionPlanCard({
       : null
   const inCooldown = cooldownEndMs !== null && Date.now() < cooldownEndMs
 
+  const nextDayResetTime = (() => {
+    const now = new Date()
+    const tomorrow = new Date(now)
+    tomorrow.setDate(tomorrow.getDate() + 1)
+    tomorrow.setHours(0, 0, 0, 0)
+    return tomorrow.toLocaleString()
+  })()
+
   const resetDisabledReason =
     resetTimes <= 0
-      ? '无剩余重置次数'
+      ? `今天无剩余重置次数，下次重置时间：${nextDayResetTime}`
       : inCooldown
         ? (() => {
             const nextResetTime = new Date(cooldownEndMs!).toLocaleString()
@@ -263,6 +271,13 @@ export function SubscriptionPlanCard({
                 <AlertDialogHeader>
                   <AlertDialogTitle>确认重置额度？</AlertDialogTitle>
                   <AlertDialogDescription>
+                    {resetTimes <= 0 && (
+                      <span>
+                        今天无剩余重置次数，下次重置时间：
+                        {nextDayResetTime}
+                        <br />
+                      </span>
+                    )}
                     {inCooldown && (
                       <span>
                         冷却中，下次可重置时间：

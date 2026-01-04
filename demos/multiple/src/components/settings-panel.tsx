@@ -112,14 +112,20 @@ export function SettingsPanel() {
     return host
   }
 
-  const handleAdd = () => {
-    if (!newName.trim() || !newToken.trim()) return
-    const apiHost = getEffectiveApiHost(newApiHost, customApiHost)
-    addAccount(newName.trim(), newToken.trim(), apiHost)
-    setNewName('')
-    setNewToken('')
-    setNewApiHost(DEFAULT_API_HOST)
-    setCustomApiHost('')
+  const [isAdding, setIsAdding] = useState(false)
+  const handleAdd = async () => {
+    if (!newName.trim() || !newToken.trim() || isAdding) return
+    setIsAdding(true)
+    try {
+      const apiHost = getEffectiveApiHost(newApiHost, customApiHost)
+      await addAccount(newName.trim(), newToken.trim(), apiHost)
+      setNewName('')
+      setNewToken('')
+      setNewApiHost(DEFAULT_API_HOST)
+      setCustomApiHost('')
+    } finally {
+      setIsAdding(false)
+    }
   }
 
   const isKnownHost = (host: string) =>
@@ -201,7 +207,10 @@ export function SettingsPanel() {
     setTimeout(() => setImportExportCopied(false), 2000)
   }
 
-  const handleImport = () => {
+  const [isImporting, setIsImporting] = useState(false)
+  const handleImport = async () => {
+    if (isImporting) return
+    setIsImporting(true)
     try {
       const data = JSON.parse(importExportText) as Array<{
         name: string
@@ -212,7 +221,11 @@ export function SettingsPanel() {
       let imported = 0
       for (const item of data) {
         if (item.name && item.token) {
-          addAccount(item.name, item.token, item.apiHost || DEFAULT_API_HOST)
+          await addAccount(
+            item.name,
+            item.token,
+            item.apiHost || DEFAULT_API_HOST,
+          )
           imported++
         }
       }
@@ -222,6 +235,8 @@ export function SettingsPanel() {
       alert(
         '导入失败：' + (err instanceof Error ? err.message : 'JSON 格式错误'),
       )
+    } finally {
+      setIsImporting(false)
     }
   }
 

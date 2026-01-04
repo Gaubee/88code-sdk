@@ -41,11 +41,15 @@ interface ServiceContextValue {
   accounts: Account[]
   currentAccount: Account | null
   setCurrentAccount: (account: Account | null) => void
-  addAccount: (name: string, token: string, apiHost?: string) => Account
+  addAccount: (
+    name: string,
+    token: string,
+    apiHost?: string,
+  ) => Promise<Account>
   removeAccount: (id: string) => void
   updateAccount: (
     id: string,
-    updates: Partial<Pick<Account, 'name' | 'token' | 'apiHost'>>,
+    updates: Partial<Pick<Account, 'name' | 'token' | 'apiHost' | 'employeeId'>>,
   ) => void
   refreshAccounts: () => void
 }
@@ -86,14 +90,25 @@ export function ServiceProvider({ children }: ServiceProviderProps) {
     setAccounts(getAccounts())
   }, [])
 
-  // 添加账号
+  // 添加账号（异步，先验证 token 获取 employeeId）
   const addAccount = React.useCallback(
-    (
+    async (
       name: string,
       token: string,
       apiHost: string = DEFAULT_API_HOST,
-    ): Account => {
-      const newAccount = addAccountToStorage(name, token, apiHost)
+    ): Promise<Account> => {
+      // 先验证 token 并获取 employeeId
+      let employeeId: number | undefined
+      try {
+        const queries = code88.getQueries({ token, apiHost } as Account)
+        const result = await queries.getLoginInfo()
+        if (result.success && result.data) {
+          employeeId = result.data.employeeId
+        }
+      } catch {
+        // 验证失败也允许添加，只是没有 employeeId
+      }
+      const newAccount = addAccountToStorage(name, token, apiHost, employeeId)
       setAccounts(getAccounts())
       return newAccount
     },
@@ -111,7 +126,7 @@ export function ServiceProvider({ children }: ServiceProviderProps) {
   const updateAccount = React.useCallback(
     (
       id: string,
-      updates: Partial<Pick<Account, 'name' | 'token' | 'apiHost'>>,
+      updates: Partial<Pick<Account, 'name' | 'token' | 'apiHost' | 'employeeId'>>,
     ) => {
       updateAccountInStorage(id, updates)
       setAccounts(getAccounts())

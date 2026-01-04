@@ -112,7 +112,9 @@ export function Layout({ children }: LayoutProps) {
                         tooltip={account.name}
                       >
                         <AccountAvatar
-                          seed={account.id}
+                          seed={
+                            account.employeeId?.toString() ?? account.id
+                          }
                           name={account.name}
                           className="size-4"
                         />

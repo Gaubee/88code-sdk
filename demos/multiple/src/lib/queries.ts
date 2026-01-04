@@ -35,7 +35,7 @@ export const queryKeys = {
 
 /** 登录信息 */
 export function useLoginInfo(account: Account | null) {
-  const { code88 } = useService()
+  const { code88, updateAccount } = useService()
   const { interval } = useRefresh()
   const enabled = !!account
 
@@ -48,8 +48,12 @@ export function useLoginInfo(account: Account | null) {
     const queries = code88.getQueries(account)
     const result = await queries.getLoginInfo()
     if (!result.success) throw new Error(result.message || '获取登录信息失败')
+    // 自动补充 employeeId（用于生成稳定的 avatar）
+    if (!account.employeeId && result.data.employeeId) {
+      updateAccount(account.id, { employeeId: result.data.employeeId })
+    }
     return result.data
-  }, [account?.id, account?.token, account?.apiHost, code88])
+  }, [account?.id, account?.token, account?.apiHost, account?.employeeId, code88, updateAccount])
 
   const query = useQuery({
     queryKey,

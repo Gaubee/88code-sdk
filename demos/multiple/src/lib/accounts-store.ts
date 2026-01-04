@@ -12,6 +12,8 @@ export const DEFAULT_API_HOST = DEFAULT_API_HOSTS[0].value
 
 export interface Account {
   id: string
+  /** 用于生成稳定的 avatar，来自 loginInfo.employeeId */
+  employeeId?: number
   name: string
   token: string
   apiHost: string
@@ -40,10 +42,12 @@ export function addAccount(
   name: string,
   token: string,
   apiHost: string = DEFAULT_API_HOST,
+  employeeId?: number,
 ): Account {
   const accounts = getAccounts()
   const newAccount: Account = {
     id: crypto.randomUUID(),
+    employeeId,
     name,
     token,
     apiHost,
@@ -61,7 +65,7 @@ export function removeAccount(id: string): void {
 
 export function updateAccount(
   id: string,
-  updates: Partial<Pick<Account, 'name' | 'token' | 'apiHost'>>,
+  updates: Partial<Pick<Account, 'name' | 'token' | 'apiHost' | 'employeeId'>>,
 ): void {
   const accounts = getAccounts()
   const index = accounts.findIndex((a) => a.id === id)

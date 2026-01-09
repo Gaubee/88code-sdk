@@ -319,3 +319,9 @@ export interface CreditHistoryItem {
   /** 客户端 IP */
   clientIp: string | null
 }
+
+/** Credit 历史原始响应结构 */
+export interface CreditHistoryRawResponse {
+  history: PagedResponse<CreditHistoryItem>
+  accountDetails: Record<string, unknown>
+}

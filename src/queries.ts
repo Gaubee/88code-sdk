@@ -14,6 +14,7 @@ import type {
   CodexFreeQuota,
   CreditHistoryItem,
   CreditHistoryParams,
+  CreditHistoryRawResponse,
   DashboardData,
   LoginInfo,
   ModelUsageTimelineParams,
@@ -347,7 +348,21 @@ export class Code88Queries {
     })
 
     const endpoint = `${API_ENDPOINTS.CREDIT_HISTORY_RANGE}?${searchParams.toString()}`
-    return this.client.get<PagedResponse<CreditHistoryItem>>(endpoint)
+    const result = await this.client.get<CreditHistoryRawResponse>(endpoint)
+
+    if (result.success) {
+      return {
+        success: true,
+        data: result.data.history,
+      }
+    }
+
+    return {
+      success: false,
+      data: null as never,
+      message: result.message,
+      error: result.error,
+    }
   }
 
   /**

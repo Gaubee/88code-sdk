@@ -340,7 +340,7 @@ function OfficialStatusGroupSection({
               <TableHead className="hidden @lg:table-cell whitespace-nowrap">
                 最后监测
               </TableHead>
-              <TableHead className="hidden @sm:table-cell whitespace-nowrap">
+              <TableHead className="hidden @xl:table-cell whitespace-nowrap">
                 质量趋势
               </TableHead>
             </TableRow>
@@ -356,7 +356,7 @@ function OfficialStatusGroupSection({
                 <TableRow key={provider.id}>
                   <TableCell className="font-medium whitespace-nowrap">
                     <div>{provider.name}</div>
-                    <div className="mt-1 block @sm:hidden">
+                    <div className="mt-1 block @xl:hidden">
                       <MicroTrendLine timeline={provider.timeline} />
                     </div>
                   </TableCell>
@@ -380,7 +380,7 @@ function OfficialStatusGroupSection({
                   <TableCell className="hidden @lg:table-cell text-muted-foreground text-xs">
                     {formatCheckedAt(provider.latest.checked_at)}
                   </TableCell>
-                  <TableCell className="hidden @sm:table-cell">
+                  <TableCell className="hidden @xl:table-cell">
                     <OfficialStatusTimeline timeline={provider.timeline} />
                   </TableCell>
                 </TableRow>

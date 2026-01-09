@@ -29,6 +29,8 @@ export const queryKeys = {
     [...queryKeys.account(accountId), 'creditHistory'] as const,
   modelUsage: (accountId: string) =>
     [...queryKeys.account(accountId), 'modelUsage'] as const,
+  recentHourlyUsage: (accountId: string) =>
+    [...queryKeys.account(accountId), 'recentHourlyUsage'] as const,
 }
 
 // ===== Query Hooks =====
@@ -251,6 +253,78 @@ export function useModelUsage(account: Account | null) {
     })
     if (!result.success) throw new Error(result.message || '获取模型用量失败')
     return result.data
+  }, [account?.id, account?.token, account?.apiHost, code88])
+
+  const query = useQuery({
+    queryKey,
+    queryFn,
+    enabled,
+    refetchInterval: enabled ? interval : false,
+  })
+
+  useRegisterRefetch(JSON.stringify(queryKey), query.refetch, enabled)
+
+  return query
+}
+
+/** 最近1小时用量 (按分钟聚合) */
+export function useRecentHourlyUsage(account: Account | null) {
+  const { code88 } = useService()
+  const { interval } = useRefresh()
+  const enabled = !!account
+
+  const queryKey = React.useMemo(
+    () => queryKeys.recentHourlyUsage(account?.id ?? ''),
+    [account?.id],
+  )
+
+  const queryFn = React.useCallback(async () => {
+    if (!account) throw new Error('No account')
+    const queries = code88.getQueries(account)
+    const now = new Date()
+    const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000)
+
+    const result = await queries.getCreditHistory({
+      startTime: oneHourAgo,
+      endTime: now,
+      pageNum: 1,
+      pageSize: 100,
+    })
+
+    if (!result.success) throw new Error(result.message || '获取最近用量失败')
+
+    const history = result.data.list
+    const usageByMinute = new Map<number, number>()
+
+    // 初始化过去60分钟的时间桶
+    for (let i = 0; i < 60; i++) {
+      const time = new Date(now.getTime() - i * 60 * 1000)
+      time.setSeconds(0, 0)
+      usageByMinute.set(time.getTime(), 0)
+    }
+
+    // 聚合数据
+    history.forEach((item) => {
+      if (item.creditChange < 0) {
+        const time = new Date(item.createdAt)
+        time.setSeconds(0, 0)
+        const timestamp = time.getTime()
+        // 只聚合在最近一小时内的记录
+        if (usageByMinute.has(timestamp)) {
+          usageByMinute.set(
+            timestamp,
+            (usageByMinute.get(timestamp) || 0) + Math.abs(item.creditChange),
+          )
+        }
+      }
+    })
+
+    return Array.from(usageByMinute.entries())
+      .map(([timestamp, cost]) => ({
+        date: new Date(timestamp),
+        cost,
+      }))
+      .sort((a, b) => a.date.getTime() - b.date.getTime())
   }, [account?.id, account?.token, account?.apiHost, code88])
 
   const query = useQuery({

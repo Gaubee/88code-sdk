@@ -41,7 +41,7 @@ import {
   queryKeys,
   useCodexFreeQuota,
   useLoginInfo,
-  useModelUsage,
+  useRecentHourlyUsage,
   useResetCredits,
   useSubscriptions,
 } from '@/lib/queries'
@@ -170,33 +170,38 @@ function CodexFreeSummary({ quota }: { quota: CodexFreeQuota }) {
   )
 }
 
-function UsageMiniChart({ data }: { data: ModelUsageTimelinePoint[] }) {
+function UsageMiniChart({ data }: { data: { date: Date; cost: number }[] }) {
   if (!data || data.length === 0) return null
 
   // 找出最大值用于归一化
-  const maxCost = Math.max(...data.map((d) => d.totalCost), 0.01) // 避免除以0
-  const totalCost = data.reduce((acc, cur) => acc + cur.totalCost, 0)
+  const maxCost = Math.max(...data.map((d) => d.cost), 0.0001) // 避免除以0
+  const totalCost = data.reduce((acc, cur) => acc + cur.cost, 0)
 
   // 如果总花费为0，不显示图表
   if (totalCost === 0) return null
+
+  const formatTime = (date: Date) => {
+    return `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`
+  }
 
   return (
     <div className="border-border mt-4 border-t pt-4">
       <div className="mb-2 flex items-center justify-between">
         <span className="text-muted-foreground text-xs font-medium">
-          30天用量趋势
+          近1小时用量
         </span>
         <span className="text-muted-foreground text-xs">
-          总计: ${totalCost.toFixed(2)}
+          总计: ${totalCost.toFixed(4)}
         </span>
       </div>
       <div className="flex h-8 w-full items-end gap-0.5">
         {data.map((point) => {
-          const heightPercent = Math.min((point.totalCost / maxCost) * 100, 100)
+          const heightPercent = Math.min((point.cost / maxCost) * 100, 100)
+          const timeStr = formatTime(point.date)
           return (
             <div
-              key={point.date}
-              title={`${point.date}: $${point.totalCost.toFixed(4)}`}
+              key={point.date.getTime()}
+              title={`${timeStr}: $${point.cost.toFixed(6)}`}
               className="bg-primary/20 hover:bg-primary/50 min-w-[2px] flex-1 rounded-t-[1px] transition-colors"
               style={{ height: `${Math.max(heightPercent, 5)}%` }} // 至少给 5% 高度以便可见
             />
@@ -211,7 +216,7 @@ function AccountSummaryCard({ account }: { account: Account }) {
   const { data: loginInfo } = useLoginInfo(account)
   const subsQuery = useSubscriptions(account)
   const codexFreeQuery = useCodexFreeQuota(account)
-  const usageQuery = useModelUsage(account)
+  const usageQuery = useRecentHourlyUsage(account)
   const resetMutation = useResetCredits(account)
   const [resettingId, setResettingId] = React.useState<number | null>(null)
 
@@ -264,8 +269,8 @@ function AccountSummaryCard({ account }: { account: Account }) {
           label="Codex Free"
         />
         <DebugRefreshInfo
-          queryKey={queryKeys.modelUsage(account.id)}
-          label="用量"
+          queryKey={queryKeys.recentHourlyUsage(account.id)}
+          label="实时用量"
         />
       </CardHeader>
       <CardContent>

@@ -285,6 +285,29 @@ function OfficialStatusTimeline({
   )
 }
 
+function MicroTrendLine({
+  timeline,
+}: {
+  timeline: OfficialStatusTimelinePoint[]
+}) {
+  if (timeline.length === 0) return null
+  // 取最近 40 个点
+  const displayTimeline = timeline.slice(0, 40)
+
+  return (
+    <div className="flex h-1 w-full max-w-[80px] overflow-hidden rounded-full opacity-80">
+      {displayTimeline.map((point, index) => {
+        let colorClass = 'bg-muted'
+        if (point.status === 'operational') colorClass = 'bg-green-500'
+        else if (point.status === 'degraded') colorClass = 'bg-amber-500'
+        else if (point.status === 'error') colorClass = 'bg-red-500'
+
+        return <div key={index} className={`flex-1 ${colorClass}`} />
+      })}
+    </div>
+  )
+}
+
 function OfficialStatusGroupSection({
   title,
   providers,
@@ -332,7 +355,10 @@ function OfficialStatusGroupSection({
               return (
                 <TableRow key={provider.id}>
                   <TableCell className="font-medium whitespace-nowrap">
-                    {provider.name}
+                    <div>{provider.name}</div>
+                    <div className="mt-1 block @sm:hidden">
+                      <MicroTrendLine timeline={provider.timeline} />
+                    </div>
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">

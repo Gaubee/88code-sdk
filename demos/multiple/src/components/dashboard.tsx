@@ -297,7 +297,7 @@ function OfficialStatusGroupSection({
   error: Error | null
 }) {
   return (
-    <div className="space-y-2">
+    <div className="space-y-2 @container">
       <h4 className="text-muted-foreground text-sm font-medium">{title}</h4>
       {error ? (
         <p className="text-destructive text-sm">{error.message}</p>
@@ -309,11 +309,17 @@ function OfficialStatusGroupSection({
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>节点</TableHead>
-              <TableHead>当前状态</TableHead>
-              <TableHead>成功率</TableHead>
-              <TableHead>最后监测</TableHead>
-              <TableHead>质量趋势</TableHead>
+              <TableHead className="whitespace-nowrap">节点</TableHead>
+              <TableHead className="whitespace-nowrap">当前状态</TableHead>
+              <TableHead className="hidden @md:table-cell whitespace-nowrap">
+                成功率
+              </TableHead>
+              <TableHead className="hidden @lg:table-cell whitespace-nowrap">
+                最后监测
+              </TableHead>
+              <TableHead className="hidden @sm:table-cell whitespace-nowrap">
+                质量趋势
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -325,26 +331,30 @@ function OfficialStatusGroupSection({
                   : 'N/A'
               return (
                 <TableRow key={provider.id}>
-                  <TableCell className="font-medium">{provider.name}</TableCell>
-                  <TableCell>
-                    <span
-                      className={
-                        'rounded-none px-2 py-0.5 text-xs ' + status.className
-                      }
-                    >
-                      {status.text}
-                    </span>
-                    <span className="text-muted-foreground ml-2 text-xs">
-                      {latencyText}
-                    </span>
+                  <TableCell className="font-medium whitespace-nowrap">
+                    {provider.name}
                   </TableCell>
-                  <TableCell className="text-xs">
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={
+                          'rounded-none px-2 py-0.5 text-xs ' + status.className
+                        }
+                      >
+                        {status.text}
+                      </span>
+                      <span className="text-muted-foreground text-xs whitespace-nowrap">
+                        {latencyText}
+                      </span>
+                    </div>
+                  </TableCell>
+                  <TableCell className="hidden @md:table-cell text-xs">
                     {provider.statistics.success_rate.toFixed(2)}%
                   </TableCell>
-                  <TableCell className="text-muted-foreground text-xs">
+                  <TableCell className="hidden @lg:table-cell text-muted-foreground text-xs">
                     {formatCheckedAt(provider.latest.checked_at)}
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="hidden @sm:table-cell">
                     <OfficialStatusTimeline timeline={provider.timeline} />
                   </TableCell>
                 </TableRow>

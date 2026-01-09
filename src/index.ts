@@ -90,6 +90,21 @@ export type {
   RelayPulseTimelinePoint,
 } from './extensions/relaypulse.ts'
 
+export {
+  OFFICIAL_STATUS_API_URL,
+  get88codeStatus,
+} from './extensions/88code-status.ts'
+export type {
+  OfficialStatusType,
+  OfficialStatusLatest,
+  OfficialStatusStatistics,
+  OfficialStatusTimelinePoint,
+  OfficialStatusProvider,
+  OfficialStatusSummary,
+  OfficialStatusMetadata,
+  OfficialStatusResponse,
+} from './extensions/88code-status.ts'
+
 // ===== Services: Smart Auto-Reset =====
 export {
   shouldResetSubscription,

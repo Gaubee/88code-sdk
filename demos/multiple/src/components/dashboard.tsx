@@ -1,7 +1,8 @@
 import * as React from 'react'
 import type {
   CodexFreeQuota,
-  RelayPulseStatusEntry,
+  OfficialStatusProvider,
+  OfficialStatusTimelinePoint,
   Subscription,
 } from '@gaubee/88code-sdk'
 import { Link } from '@tanstack/react-router'
@@ -34,8 +35,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { Label } from '@/components/ui/label'
-import { Switch } from '@/components/ui/switch'
 import type { Account } from '@/lib/accounts-store'
 import {
   queryKeys,
@@ -44,14 +43,13 @@ import {
   useResetCredits,
   useSubscriptions,
 } from '@/lib/queries'
-import { useRelayPulseStatus } from '@/lib/relaypulse-queries'
+import { useOfficialStatus } from '@/lib/88code-status-queries'
 import {
-  computeRelayPulseAvailabilityPercent,
-  formatRelayPulseTimestampSeconds,
-  getRelayPulseStatusLabel,
-} from '@/lib/relaypulse-utils'
+  formatCheckedAt,
+  getOfficialStatusLabel,
+  groupProvidersByDisplayGroup,
+} from '@/lib/88code-status-utils'
 import { useAccounts, useRefresh } from '@/lib/use-sdk'
-import { useRelayPulseSettings } from '@/lib/service-context'
 
 type DashboardTotals = {
   totalCredits: number
@@ -260,18 +258,25 @@ function AccountSummaryCard({ account }: { account: Account }) {
   )
 }
 
-function StatusTrend({ entry }: { entry: RelayPulseStatusEntry }) {
-  const timeline = entry.timeline ?? []
+function OfficialStatusTimeline({
+  timeline,
+}: {
+  timeline: OfficialStatusTimelinePoint[]
+}) {
   if (timeline.length === 0) return null
+
+  const displayTimeline = timeline.slice(0, 60)
 
   return (
     <div className="flex items-center gap-0.5">
-      {timeline.map((point) => {
-        const status = getRelayPulseStatusLabel(point.status)
+      {displayTimeline.map((point, index) => {
+        const status = getOfficialStatusLabel(point.status)
+        const latencyText =
+          point.latency_ms != null ? `${point.latency_ms}ms` : 'N/A'
         return (
           <div
-            key={point.timestamp}
-            title={`${point.time} · ${status.text} · ${point.latency}ms`}
+            key={index}
+            title={`${formatCheckedAt(point.checked_at)} · ${status.text} · ${latencyText}`}
             className={'h-3 w-1.5 rounded-none ' + status.className}
           />
         )
@@ -280,52 +285,47 @@ function StatusTrend({ entry }: { entry: RelayPulseStatusEntry }) {
   )
 }
 
-function RelayPulseServiceSection({
+function OfficialStatusGroupSection({
   title,
-  entries,
+  providers,
   isLoading,
   error,
 }: {
   title: string
-  entries: RelayPulseStatusEntry[]
+  providers: OfficialStatusProvider[]
   isLoading: boolean
   error: Error | null
 }) {
-  const items = React.useMemo(() => {
-    return entries.slice().sort((a, b) => a.channel.localeCompare(b.channel))
-  }, [entries])
-
   return (
     <div className="space-y-2">
       <h4 className="text-muted-foreground text-sm font-medium">{title}</h4>
       {error ? (
         <p className="text-destructive text-sm">{error.message}</p>
-      ) : isLoading && items.length === 0 ? (
+      ) : isLoading && providers.length === 0 ? (
         <p className="text-muted-foreground text-sm">加载中...</p>
-      ) : items.length === 0 ? (
+      ) : providers.length === 0 ? (
         <p className="text-muted-foreground text-sm">暂无数据</p>
       ) : (
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Channel</TableHead>
+              <TableHead>节点</TableHead>
               <TableHead>当前状态</TableHead>
-              <TableHead>可用率</TableHead>
+              <TableHead>成功率</TableHead>
               <TableHead>最后监测</TableHead>
               <TableHead>质量趋势</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {items.map((entry: RelayPulseStatusEntry) => {
-              const status = getRelayPulseStatusLabel(
-                entry.current_status.status,
-              )
-              const availability = computeRelayPulseAvailabilityPercent(entry)
+            {providers.map((provider) => {
+              const status = getOfficialStatusLabel(provider.latest.status)
+              const latencyText =
+                provider.latest.latency_ms != null
+                  ? `${provider.latest.latency_ms}ms`
+                  : 'N/A'
               return (
-                <TableRow
-                  key={`${entry.provider_slug}:${entry.service}:${entry.channel}`}
-                >
-                  <TableCell className="font-medium">{entry.channel}</TableCell>
+                <TableRow key={provider.id}>
+                  <TableCell className="font-medium">{provider.name}</TableCell>
                   <TableCell>
                     <span
                       className={
@@ -335,19 +335,17 @@ function RelayPulseServiceSection({
                       {status.text}
                     </span>
                     <span className="text-muted-foreground ml-2 text-xs">
-                      {entry.current_status.latency}ms
+                      {latencyText}
                     </span>
                   </TableCell>
                   <TableCell className="text-xs">
-                    {availability.toFixed(2)}%
+                    {provider.statistics.success_rate.toFixed(2)}%
                   </TableCell>
                   <TableCell className="text-muted-foreground text-xs">
-                    {formatRelayPulseTimestampSeconds(
-                      entry.current_status.timestamp,
-                    )}
+                    {formatCheckedAt(provider.latest.checked_at)}
                   </TableCell>
                   <TableCell>
-                    <StatusTrend entry={entry} />
+                    <OfficialStatusTimeline timeline={provider.timeline} />
                   </TableCell>
                 </TableRow>
               )
@@ -359,20 +357,25 @@ function RelayPulseServiceSection({
   )
 }
 
-function RelayPulse88codeCard() {
-  const ccQuery = useRelayPulseStatus({
-    period: '90m',
-    board: 'hot',
-    provider: '88code',
-    service: 'cc',
-  })
+function Official88codeStatusCard() {
+  const statusQuery = useOfficialStatus()
 
-  const cxQuery = useRelayPulseStatus({
-    period: '90m',
-    board: 'hot',
-    provider: '88code',
-    service: 'cx',
-  })
+  const groupedProviders = React.useMemo(() => {
+    if (!statusQuery.data?.providers) return new Map()
+    return groupProvidersByDisplayGroup(statusQuery.data.providers)
+  }, [statusQuery.data?.providers])
+
+  const groupOrder = ['Claude V5', 'Claude V3', 'Codex']
+  const sortedGroups = Array.from(groupedProviders.entries()).sort(
+    ([a], [b]) => {
+      const aIndex = groupOrder.indexOf(a)
+      const bIndex = groupOrder.indexOf(b)
+      if (aIndex === -1 && bIndex === -1) return a.localeCompare(b)
+      if (aIndex === -1) return 1
+      if (bIndex === -1) return -1
+      return aIndex - bIndex
+    },
+  )
 
   return (
     <Card>
@@ -383,7 +386,7 @@ function RelayPulse88codeCard() {
               <Activity className="size-4" />
               88code 服务状态
             </CardTitle>
-            <CardDescription>来源：RelayPulse · 近90分钟</CardDescription>
+            <CardDescription>来源：88code 官方 · 每分钟更新</CardDescription>
           </div>
           <Link to="/status">
             <Button variant="outline" size="sm">
@@ -391,22 +394,27 @@ function RelayPulse88codeCard() {
             </Button>
           </Link>
         </div>
-        <DebugRefreshInfo queryKey={ccQuery.queryKey} label="RelayPulse CC" />
-        <DebugRefreshInfo queryKey={cxQuery.queryKey} label="RelayPulse CX" />
+        <DebugRefreshInfo
+          queryKey={statusQuery.queryKey}
+          label="Official Status"
+        />
       </CardHeader>
       <CardContent className="space-y-4">
-        <RelayPulseServiceSection
-          title="Claude Code (CC)"
-          entries={ccQuery.data ?? []}
-          isLoading={ccQuery.isLoading}
-          error={ccQuery.error}
-        />
-        <RelayPulseServiceSection
-          title="Claude Code Max (CX)"
-          entries={cxQuery.data ?? []}
-          isLoading={cxQuery.isLoading}
-          error={cxQuery.error}
-        />
+        {sortedGroups.map(([group, providers]) => (
+          <OfficialStatusGroupSection
+            key={group}
+            title={group}
+            providers={providers}
+            isLoading={statusQuery.isLoading}
+            error={statusQuery.error}
+          />
+        ))}
+        {sortedGroups.length === 0 && !statusQuery.isLoading && (
+          <p className="text-muted-foreground text-sm">暂无状态数据</p>
+        )}
+        {statusQuery.isLoading && sortedGroups.length === 0 && (
+          <p className="text-muted-foreground text-sm">加载中...</p>
+        )}
       </CardContent>
     </Card>
   )
@@ -415,7 +423,6 @@ function RelayPulse88codeCard() {
 export function Dashboard() {
   const { accounts } = useAccounts()
   const { refreshAll } = useRefresh()
-  const { enabled: relayPulseEnabled } = useRelayPulseSettings()
   const totals = useDashboardTotals(accounts)
 
   if (accounts.length === 0) {
@@ -488,11 +495,9 @@ export function Dashboard() {
         </Card>
       </div>
 
-      {relayPulseEnabled && (
-        <div className="mb-8">
-          <RelayPulse88codeCard />
-        </div>
-      )}
+      <div className="mb-8">
+        <Official88codeStatusCard />
+      </div>
 
       {/* Accounts */}
       <div className="space-y-4">

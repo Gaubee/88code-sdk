@@ -25,6 +25,34 @@ import type {
 } from './types.ts'
 
 /**
+ * 生成带时区偏移的 ISO 格式时间字符串 (如 2023-12-11T12:00:00+08:00)
+ * 相比 date.toISOString() (总是返回 UTC Z), 这个函数保留本地时区
+ */
+function toLocalISOString(date: Date): string {
+  const tzo = -date.getTimezoneOffset()
+  const dif = tzo >= 0 ? '+' : '-'
+  const pad = (num: number) => (num < 10 ? '0' : '') + num
+
+  return (
+    date.getFullYear() +
+    '-' +
+    pad(date.getMonth() + 1) +
+    '-' +
+    pad(date.getDate()) +
+    'T' +
+    pad(date.getHours()) +
+    ':' +
+    pad(date.getMinutes()) +
+    ':' +
+    pad(date.getSeconds()) +
+    dif +
+    pad(Math.floor(Math.abs(tzo) / 60)) +
+    ':' +
+    pad(Math.abs(tzo) % 60)
+  )
+}
+
+/**
  * 只读查询 API
  *
  * @example
@@ -209,8 +237,9 @@ export class Code88Queries {
     const { startDate, endDate, granularity = 'day' } = params
 
     const startDateStr =
-      startDate instanceof Date ? startDate.toISOString() : startDate
-    const endDateStr = endDate instanceof Date ? endDate.toISOString() : endDate
+      startDate instanceof Date ? toLocalISOString(startDate) : startDate
+    const endDateStr =
+      endDate instanceof Date ? toLocalISOString(endDate) : endDate
 
     const searchParams = new URLSearchParams({
       startDate: startDateStr,
@@ -305,14 +334,10 @@ export class Code88Queries {
   ): Promise<ApiResult<PagedResponse<CreditHistoryItem>>> {
     const { startTime, endTime, pageNum = 1, pageSize = 20 } = params
 
-    const formatLocalTime = (date: Date): string => {
-      const pad = (n: number) => n.toString().padStart(2, '0')
-      return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`
-    }
     const startTimeStr =
-      startTime instanceof Date ? formatLocalTime(startTime) : startTime
+      startTime instanceof Date ? toLocalISOString(startTime) : startTime
     const endTimeStr =
-      endTime instanceof Date ? formatLocalTime(endTime) : endTime
+      endTime instanceof Date ? toLocalISOString(endTime) : endTime
 
     const searchParams = new URLSearchParams({
       pageNum: String(pageNum),
